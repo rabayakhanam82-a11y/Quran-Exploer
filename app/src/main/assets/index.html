@@ -9,28 +9,28 @@
     <link rel="icon" type="image/png" href="quran_explorer_icon.png">
     <meta name="theme-color" content="#08140f">
     <style>
-        /* ========== NQDH-ALIGNED THEME TOKENS ========== */
+        /* ========== CORPORATE STUDIO THEME TOKENS ========== */
         :root {
-            --bg-primary: #08140f;
-            --bg-secondary: #0f211a;
-            --bg-tertiary: #163329;
-            --text-primary: #eaf2ee;
-            --text-secondary: #9cb8ac;
-            --accent: #1a6b4c;
-            --accent-deep: #0d4a33;
-            --accent-hover: #238b62;
-            --gold: #d4a853;
-            --gold-light: #e8c97a;
-            --border-color: #8e7140;
-            --card-bg: #11261e;
-            --input-bg: #0a1712;
-            --shadow: rgba(0, 0, 0, 0.45);
-            --shadow-soft: rgba(10, 34, 26, 0.34);
-            --ring-gold: rgba(212, 168, 83, 0.34);
-            --ring-accent: rgba(26, 107, 76, 0.35);
-            --glow-gold: rgba(212, 168, 83, 0.32);
-            --glow-accent: rgba(35, 139, 98, 0.28);
-            --card-gradient: linear-gradient(150deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0));
+            --bg-primary: #090e15;
+            --bg-secondary: #0f1722;
+            --bg-tertiary: #16202e;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #10b981;
+            --accent-deep: #059669;
+            --accent-hover: #34d399;
+            --gold: #d4af37;
+            --gold-light: #f3e5ab;
+            --border-color: rgba(255, 255, 255, 0.09);
+            --card-bg: #121a26;
+            --input-bg: #0b111a;
+            --shadow: rgba(0, 0, 0, 0.55);
+            --shadow-soft: rgba(0, 0, 0, 0.32);
+            --ring-gold: rgba(212, 175, 55, 0.35);
+            --ring-accent: rgba(16, 185, 129, 0.35);
+            --glow-gold: rgba(212, 175, 55, 0.28);
+            --glow-accent: rgba(16, 185, 129, 0.25);
+            --card-gradient: linear-gradient(150deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0));
             --tajweed-ghunnah: #f97316;
             --tajweed-ikhfa: #a855f7;
             --tajweed-idgham: #14b8a6;
@@ -57,26 +57,26 @@
         }
 
         [data-theme="light"] {
-            --bg-primary: #d8e3d8;
-            --bg-secondary: #e6eee4;
-            --bg-tertiary: #cedcca;
-            --text-primary: #133225;
-            --text-secondary: #3c5b4d;
-            --accent: #1f6f54;
-            --accent-deep: #16523d;
-            --accent-hover: #2a7d60;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent: #059669;
+            --accent-deep: #047857;
+            --accent-hover: #10b981;
             --gold: #b3882f;
-            --gold-light: #d7b86f;
-            --border-color: #af955e;
-            --card-bg: #e3ebe0;
-            --input-bg: #d8e4d6;
-            --shadow: rgba(19, 52, 39, 0.2);
-            --shadow-soft: rgba(20, 66, 50, 0.14);
-            --ring-gold: rgba(179, 136, 47, 0.24);
-            --ring-accent: rgba(31, 111, 84, 0.2);
-            --glow-gold: rgba(179, 136, 47, 0.2);
-            --glow-accent: rgba(31, 111, 84, 0.18);
-            --card-gradient: linear-gradient(160deg, rgba(31, 111, 84, 0.06), rgba(255, 255, 255, 0));
+            --gold-light: #946c1a;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --card-bg: #ffffff;
+            --input-bg: #f8fafc;
+            --shadow: rgba(15, 23, 42, 0.12);
+            --shadow-soft: rgba(15, 23, 42, 0.06);
+            --ring-gold: rgba(179, 136, 47, 0.25);
+            --ring-accent: rgba(5, 150, 105, 0.2);
+            --glow-gold: rgba(179, 136, 47, 0.18);
+            --glow-accent: rgba(5, 150, 105, 0.15);
+            --card-gradient: linear-gradient(160deg, rgba(5, 150, 105, 0.04), rgba(255, 255, 255, 0));
         }
 
         * {
@@ -1229,15 +1229,16 @@
             transition: width 0.15s ease;
         }
 
-        /* Senior-Friendly Audio Prompt Modal */
+        /* ========== STUDIO-GRADE AUDIO RECITATION MODAL ========== */
         .audio-prompt-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(6px);
+            background: rgba(3, 7, 12, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             z-index: 2000;
             display: none;
             align-items: center;
@@ -1250,64 +1251,107 @@
         }
 
         .audio-prompt-box {
-            background: var(--card-bg);
-            border: 2px solid var(--gold);
-            border-radius: 20px;
+            background: linear-gradient(170deg, var(--card-bg), var(--bg-secondary));
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 24px;
             max-width: 520px;
             width: 100%;
-            padding: 24px 22px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            padding: 26px 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
             color: var(--text-primary);
-            animation: promptPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: promptPop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
         }
 
         @keyframes promptPop {
-            0% { transform: scale(0.92); opacity: 0; }
+            0% { transform: scale(0.95); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
 
         .prompt-header {
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
-        .prompt-icon {
-            font-size: 2.6rem;
-            margin-bottom: 8px;
-            display: inline-block;
+        .prompt-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 6px;
         }
 
         .prompt-title {
-            font-size: 1.35rem;
+            font-size: 1.45rem;
             font-weight: 800;
-            color: var(--gold-light);
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
             margin-bottom: 4px;
         }
 
         .prompt-subtitle {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
         }
 
-        .prompt-reciter-card {
-            background: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
+        .prompt-reciter-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0 20px;
+        }
+
+        .prompt-section-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .prompt-select {
+            width: 100%;
+            background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
+            color: var(--text-primary);
             padding: 12px 14px;
-            margin: 14px 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .prompt-select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--ring-gold);
+        }
+
+        .prompt-status-badge {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.82rem;
+            padding: 6px 10px;
+            border-radius: 8px;
         }
 
-        .prompt-reciter-text {
-            font-size: 0.92rem;
+        .prompt-status-badge.downloaded {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
         }
 
-        .prompt-reciter-text b {
-            color: var(--text-primary);
-            display: block;
-            font-size: 1rem;
+        .prompt-status-badge.not-downloaded {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold-light);
+            border: 1px solid rgba(212, 175, 55, 0.2);
         }
 
         .prompt-actions {
@@ -1317,11 +1361,10 @@
             margin: 18px 0;
         }
 
-        /* 70yo friendly large button */
         .prompt-btn {
-            min-height: 54px;
+            min-height: 52px;
             border-radius: 14px;
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -1329,37 +1372,59 @@
             gap: 10px;
             cursor: pointer;
             border: none;
-            padding: 12px 18px;
-            transition: all 0.2s;
+            padding: 12px 20px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .prompt-btn:active {
+            transform: scale(0.98);
         }
 
         .prompt-btn.primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-            color: #fff;
-            border: 1.5px solid var(--gold);
+            background: linear-gradient(135deg, #d4af37, #b3882f);
+            color: #000;
+            box-shadow: 0 4px 18px var(--glow-gold);
+        }
+
+        .prompt-btn.primary:hover {
+            filter: brightness(1.08);
         }
 
         .prompt-btn.secondary {
-            background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 35%, var(--bg-tertiary)), var(--bg-tertiary));
-            color: var(--gold-light);
-            border: 1.5px solid var(--gold);
-        }
-
-        .prompt-btn.shortcut {
-            background: var(--bg-tertiary);
+            background: rgba(255, 255, 255, 0.05);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
-            font-size: 0.92rem;
-            min-height: 44px;
+        }
+
+        .prompt-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .prompt-dl-status {
+            font-size: 0.85rem;
+            color: var(--gold-light);
+            text-align: center;
+            margin-top: 8px;
+            display: none;
+            font-weight: 600;
         }
 
         .prompt-footer {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 12px;
-            font-size: 0.85rem;
+            margin-top: 16px;
+            font-size: 0.84rem;
             color: var(--text-secondary);
+        }
+
+        .prompt-remember-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
         }
 
         /* Toast Notifications */
@@ -1468,14 +1533,14 @@
                 </button>
             </div>
             <span class="top-bar-logo">
-                Quran Explorer
-                <span class="offline-badge">Offline PWA</span>
+                <svg class="app-icon" style="color: var(--gold);"><use href="#icon-book-open"/></svg>
+                <span>Quran Explorer</span>
             </span>
         </div>
 
         <div class="top-bar-center">
             <div class="top-search-box">
-                <input type="text" id="topSearchInput" placeholder="Search Quran (offline)...">
+                <input type="text" id="topSearchInput" placeholder="Search Surahs, Verses, Topics...">
                 <button id="topSearchBtn" aria-label="Search">
                     <svg class="app-icon"><use href="#icon-search"/></svg>
                 </button>
@@ -1716,10 +1781,11 @@
                 <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
                     <div>
                         <h3 class="card-title" style="font-size: 1.15rem; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
-                            <span>⚡ Quick 1-Tap Download: Juz 30 (Amma)</span>
+                            <svg class="app-icon" style="color: var(--gold);"><use href="#icon-download"/></svg>
+                            <span>Batch Download: Juz 30 (Amma)</span>
                         </h3>
                         <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 4px;">
-                            Download all 37 short Surahs (An-Naba to An-Nas) at once (~22 MB). Perfect for daily prayers and seniors!
+                            Download all 37 short Surahs (An-Naba to An-Nas) at once (~22 MB). Perfect for daily prayers and offline listening.
                         </p>
                     </div>
                     <button class="btn btn-primary" id="downloadJuz30Btn" style="font-weight: 700; gap: 8px; padding: 10px 18px;">
@@ -1948,42 +2014,41 @@
         </section>
     </main>
 
-    <!-- SENIOR-FRIENDLY AUDIO RECITATION PROMPT MODAL -->
+    <!-- STUDIO-GRADE AUDIO RECITATION MODAL -->
     <div class="audio-prompt-overlay" id="audioPromptModal">
         <div class="audio-prompt-box">
             <div class="prompt-header">
-                <span class="prompt-icon">🎙️</span>
+                <div class="prompt-tag">AUDIO RECITATION</div>
                 <div class="prompt-title" id="promptSurahTitle">Surah Al-Fatihah</div>
-                <div class="prompt-subtitle" id="promptSurahSub">Quran Audio Recitation</div>
+                <div class="prompt-subtitle" id="promptSurahSub">7 Verses • Meccan • ~1.2 MB</div>
             </div>
 
-            <div class="prompt-reciter-card">
-                <div class="prompt-reciter-text">
-                    <span style="color: var(--text-secondary); font-size: 0.85rem;">Selected Reciter (Reader):</span>
-                    <b id="promptReciterName">Mishary Rashid Alafasy</b>
-                    <span style="font-size: 0.82rem; color: var(--gold-light);" id="promptReciterAr">مشاري راشد العفاسي</span>
+            <div class="prompt-reciter-section">
+                <label class="prompt-section-label" for="promptReciterSelect">Select Reciter (Qari):</label>
+                <select id="promptReciterSelect" class="prompt-select">
+                    <option value="ar.alafasy">Mishary Rashid Alafasy (Clear & Melodious)</option>
+                    <option value="ar.abdulbasitmurattal">Abdul Basit Abdul Samad (Murattal)</option>
+                    <option value="ar.husary">Mahmoud Khalil Al-Husary (Tajweed Master)</option>
+                    <option value="ar.saadalghamidi">Saad Al-Ghamdi (Emotional & Heartfelt)</option>
+                    <option value="ar.minshawi">Muhammad Siddiq Al-Minshawi (Spiritual Murattal)</option>
+                    <option value="ar.shaatree">Abu Bakr Al-Shatri (Expressive & Melodic)</option>
+                </select>
+                <div id="promptOfflineStatusBadge" class="prompt-status-badge not-downloaded">
+                    <svg class="app-icon"><use href="#icon-cloud"/></svg>
+                    <span id="promptOfflineStatusText">Online recitation • Download to listen offline anytime</span>
                 </div>
-                <button class="btn btn-secondary btn-sm" id="promptChangeReciterBtn" style="font-size: 0.82rem; padding: 6px 12px;">
-                    Change
-                </button>
             </div>
-
-            <p style="font-size: 0.98rem; color: var(--text-primary); text-align: center; margin: 14px 0 10px; line-height: 1.4;">
-                How would you like to listen to this Surah?
-            </p>
 
             <div class="prompt-actions">
-                <button class="prompt-btn primary" id="promptPlayOnlineBtn">
-                    <svg class="app-icon" style="width: 22px; height: 22px;"><use href="#icon-play"/></svg>
-                    <span>▶️ Listen Online (Stream Now)</span>
-                </button>
-                <button class="prompt-btn secondary" id="promptDownloadAndPlayBtn">
-                    <svg class="app-icon" style="width: 22px; height: 22px;"><use href="#icon-download"/></svg>
-                    <span id="promptDownloadBtnText">📥 Download to App & Play</span>
-                </button>
-                <button class="prompt-btn shortcut" id="promptOpenDownloadsBtn">
+                <!-- DOWNLOAD BY DEFAULT -->
+                <button class="prompt-btn primary" id="promptDownloadAndPlayBtn">
                     <svg class="app-icon"><use href="#icon-download"/></svg>
-                    <span>Open Full Download Section</span>
+                    <span id="promptDownloadBtnText">Download to Device & Play</span>
+                </button>
+                <!-- STREAM FOR NOW -->
+                <button class="prompt-btn secondary" id="promptPlayOnlineBtn">
+                    <svg class="app-icon"><use href="#icon-play"/></svg>
+                    <span>Stream Online for Now</span>
                 </button>
             </div>
 
@@ -1991,15 +2056,15 @@
             <div id="promptDlProgressBar" class="surah-dl-progress-bar">
                 <div id="promptDlProgressFill" class="surah-dl-progress-fill"></div>
             </div>
-            <div id="promptDlStatusText" style="font-size: 0.88rem; color: var(--gold-light); text-align: center; margin-top: 6px; display: none;"></div>
+            <div id="promptDlStatusText" class="prompt-dl-status"></div>
 
             <div class="prompt-footer">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <label class="prompt-remember-label">
                     <input type="checkbox" id="promptRememberChoice">
-                    <span>Always stream online</span>
+                    <span>Always stream online without asking</span>
                 </label>
                 <button class="btn btn-secondary btn-sm" id="promptCloseBtn" style="padding: 6px 14px;">
-                    ✕ Close
+                    Close
                 </button>
             </div>
         </div>
@@ -2010,7 +2075,7 @@
         <div class="audio-info">
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span class="audio-title" id="audioTitle">Al-Fatihah</span>
-                <span class="reciter-badge cloud" id="barAudioStatusBadge" title="Click to view downloads">☁️ Stream</span>
+                <span class="reciter-badge cloud" id="barAudioStatusBadge" title="Click to view downloads">Stream</span>
             </div>
             <div class="audio-subtitle" id="audioSubtitle">Verse 1 • Mishary Alafasy</div>
         </div>
@@ -2142,13 +2207,12 @@
             audioPromptModal: document.getElementById('audioPromptModal'),
             promptSurahTitle: document.getElementById('promptSurahTitle'),
             promptSurahSub: document.getElementById('promptSurahSub'),
-            promptReciterName: document.getElementById('promptReciterName'),
-            promptReciterAr: document.getElementById('promptReciterAr'),
-            promptChangeReciterBtn: document.getElementById('promptChangeReciterBtn'),
+            promptReciterSelect: document.getElementById('promptReciterSelect'),
+            promptOfflineStatusBadge: document.getElementById('promptOfflineStatusBadge'),
+            promptOfflineStatusText: document.getElementById('promptOfflineStatusText'),
             promptPlayOnlineBtn: document.getElementById('promptPlayOnlineBtn'),
             promptDownloadAndPlayBtn: document.getElementById('promptDownloadAndPlayBtn'),
             promptDownloadBtnText: document.getElementById('promptDownloadBtnText'),
-            promptOpenDownloadsBtn: document.getElementById('promptOpenDownloadsBtn'),
             promptDlProgressBar: document.getElementById('promptDlProgressBar'),
             promptDlProgressFill: document.getElementById('promptDlProgressFill'),
             promptDlStatusText: document.getElementById('promptDlStatusText'),
@@ -2362,11 +2426,11 @@
             if (dom.readDownloadBtnText && window.OfflineStorageEngine) {
                 window.OfflineStorageEngine.isSurahAudioDownloaded(appState.currentReciter, surahNum).then(isDl => {
                     if (isDl) {
-                        dom.readDownloadBtnText.textContent = '✓ Audio Downloaded';
+                        dom.readDownloadBtnText.textContent = 'Audio Downloaded';
                         dom.readDownloadSurahBtn.classList.remove('btn-primary');
                         dom.readDownloadSurahBtn.classList.add('btn-secondary');
                     } else {
-                        dom.readDownloadBtnText.textContent = '📥 Download Audio';
+                        dom.readDownloadBtnText.textContent = 'Download Audio';
                     }
                 }).catch(() => {});
             }
@@ -2444,10 +2508,10 @@
             if (dom.barAudioStatusBadge) {
                 if (isOffline) {
                     dom.barAudioStatusBadge.className = 'reciter-badge downloaded';
-                    dom.barAudioStatusBadge.textContent = '💾 Offline';
+                    dom.barAudioStatusBadge.textContent = 'Offline';
                 } else {
                     dom.barAudioStatusBadge.className = 'reciter-badge cloud';
-                    dom.barAudioStatusBadge.textContent = '☁️ Stream';
+                    dom.barAudioStatusBadge.textContent = 'Stream';
                 }
             }
 
@@ -2496,23 +2560,53 @@
             );
         }
 
-        function openAudioPromptModal(surahNum, verseNum) {
+        async function updatePromptModalStatus() {
+            if (!appState.pendingPromptVerse) return;
+            const surahNum = appState.pendingPromptVerse.surah;
+            const reciterId = dom.promptReciterSelect ? dom.promptReciterSelect.value : appState.currentReciter;
+            let isDownloaded = false;
+            try {
+                if (window.OfflineStorageEngine) {
+                    isDownloaded = await window.OfflineStorageEngine.isSurahDownloaded(reciterId, surahNum);
+                }
+            } catch (e) {
+                console.warn(e);
+            }
+            const meta = window.OfflineQuranDB.getSurahMeta(surahNum);
+            const sizeEstimate = meta ? (meta.verses * 0.16).toFixed(1) : '1.5';
+
+            if (dom.promptOfflineStatusBadge) {
+                if (isDownloaded) {
+                    dom.promptOfflineStatusBadge.className = 'prompt-status-badge downloaded';
+                    dom.promptOfflineStatusBadge.innerHTML = `<svg class="app-icon"><use href="#icon-check"/></svg><span>Downloaded to Device • Instant Offline Playback</span>`;
+                    if (dom.promptDownloadBtnText) dom.promptDownloadBtnText.textContent = 'Play Offline Audio';
+                } else {
+                    dom.promptOfflineStatusBadge.className = 'prompt-status-badge not-downloaded';
+                    dom.promptOfflineStatusBadge.innerHTML = `<svg class="app-icon"><use href="#icon-cloud"/></svg><span>Online recitation • Download (~${sizeEstimate} MB) to listen offline anytime</span>`;
+                    if (dom.promptDownloadBtnText) dom.promptDownloadBtnText.textContent = `Download Surah ${meta ? meta.name : surahNum} & Play`;
+                }
+            }
+        }
+
+        async function openAudioPromptModal(surahNum, verseNum) {
             appState.pendingPromptVerse = { surah: surahNum, verse: verseNum };
             const meta = window.OfflineQuranDB.getSurahMeta(surahNum);
-            const reciterId = appState.currentReciter;
-            const reciter = window.QuranDownloadManager ? window.QuranDownloadManager.getReciter(reciterId) : null;
+            const sizeEstimate = meta ? (meta.verses * 0.16).toFixed(1) : '1.5';
 
             dom.promptSurahTitle.textContent = meta ? `Surah ${meta.name} (${meta.arabic})` : `Surah ${surahNum}`;
-            dom.promptSurahSub.textContent = `Ayah ${verseNum} • ${meta ? meta.verses : ''} Verses`;
-            dom.promptReciterName.textContent = reciter ? reciter.name : 'Mishary Rashid Alafasy';
-            dom.promptReciterAr.textContent = reciter ? reciter.arabic : '';
-            dom.promptDownloadBtnText.textContent = `Download Surah ${meta ? meta.name : surahNum} & Play`;
+            dom.promptSurahSub.textContent = `${meta ? meta.verses : ''} Verses • ${meta ? meta.revelation : ''} • ~${sizeEstimate} MB`;
+
+            if (dom.promptReciterSelect) {
+                dom.promptReciterSelect.value = appState.currentReciter;
+            }
 
             dom.promptDlProgressBar.style.display = 'none';
             dom.promptDlStatusText.style.display = 'none';
             dom.promptDlProgressFill.style.width = '0%';
             dom.promptRememberChoice.checked = false;
+            dom.promptDownloadAndPlayBtn.disabled = false;
 
+            await updatePromptModalStatus();
             dom.audioPromptModal.classList.add('show');
         }
 
@@ -2748,11 +2842,11 @@
             if (dom.quickReciterShortcutBox) {
                 dom.quickReciterShortcutBox.style.display = 'block';
                 if (count === 0) {
-                    dom.quickDownloadShortcutText.textContent = `⚡ 0 Surahs Saved - Tap to Download`;
+                    dom.quickDownloadShortcutText.textContent = `0 Surahs Saved - Tap to Download`;
                 } else if (count < 5) {
-                    dom.quickDownloadShortcutText.textContent = `📥 ${count} Surahs Saved - Download More`;
+                    dom.quickDownloadShortcutText.textContent = `${count} Surahs Saved - Download More`;
                 } else {
-                    dom.quickDownloadShortcutText.textContent = `💾 ${count} Surahs Offline - Manage`;
+                    dom.quickDownloadShortcutText.textContent = `${count} Surahs Offline - Manage`;
                 }
             }
         }
@@ -2772,7 +2866,7 @@
                 return `
                     <div class="reciter-card ${isActive ? 'active' : ''}" onclick="selectReciter('${r.id}')" style="cursor: pointer;">
                         <div class="reciter-header">
-                            <div class="reciter-icon">🎙️</div>
+                            <div class="reciter-icon"><svg class="app-icon"><use href="#icon-headphones"/></svg></div>
                             <div class="reciter-names">
                                 <h4>${r.name}</h4>
                                 <div class="reciter-ar">${r.arabic}</div>
@@ -2781,10 +2875,10 @@
                         </div>
                         <div class="reciter-card-actions">
                             <span class="reciter-badge ${downloadedCount > 0 ? 'downloaded' : 'cloud'}">
-                                ${downloadedCount > 0 ? `💾 ${downloadedCount} Surahs Offline` : '☁️ Online Stream'}
+                                ${downloadedCount > 0 ? `${downloadedCount} Surahs Offline` : 'Online Stream'}
                             </span>
                             <button class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-secondary'}" style="pointer-events: none;">
-                                ${isActive ? '✓ Selected' : 'Choose'}
+                                ${isActive ? 'Selected' : 'Choose'}
                             </button>
                         </div>
                     </div>
@@ -2798,7 +2892,7 @@
             if (!dom.surahDlListContainer) return;
             const reciterId = appState.currentReciter;
             const downloadedList = await window.OfflineStorageEngine.getDownloadedSurahsForReciter(reciterId);
-            const downloadedSet = new Set(downloadedList.map(item => item.surah));
+            const downloadedSet = new Set(downloadedList.map(item => typeof item === 'object' ? item.surahNum || item.surah : item));
 
             let surahs = window.OfflineQuranDB.surahs;
             if (query.trim()) {
@@ -2835,7 +2929,7 @@
                         </div>
                         <div class="surah-dl-actions" id="surahDlActions-${s.id}">
                             ${isDownloaded ? `
-                                <span class="reciter-badge downloaded">✓ Downloaded</span>
+                                <span class="reciter-badge downloaded">Downloaded</span>
                                 <button class="btn btn-primary btn-sm" onclick="playVerseAudioDirect(${s.id}, 1, true)" title="Play offline audio">
                                     <svg class="app-icon"><use href="#icon-play"/></svg> Play
                                 </button>
@@ -2878,7 +2972,7 @@
                     if (fill) fill.style.width = `${percent}%`;
                 },
                 async () => {
-                    showToast(`✓ Surah ${meta.name} downloaded successfully!`, 'success');
+                    showToast(`Surah ${meta.name} downloaded successfully!`, 'success');
                     await renderSurahDownloadList(dom.dlSurahSearchInput ? dom.dlSurahSearchInput.value : '');
                     await renderRecitersGrid();
                     updateStorageBadge();
@@ -2919,7 +3013,7 @@
                 return `
                     <div class="reciter-card">
                         <div class="reciter-header">
-                            <div class="reciter-icon">📖</div>
+                            <div class="reciter-icon"><svg class="app-icon"><use href="#icon-book-open"/></svg></div>
                             <div class="reciter-names">
                                 <h4>${t.name}</h4>
                                 <div class="reciter-style">${t.lang} • ${t.size}</div>
@@ -2928,10 +3022,10 @@
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 6px 0;">${t.desc}</p>
                         <div class="reciter-card-actions">
                             <span class="reciter-badge ${isDownloaded ? 'downloaded' : 'cloud'}">
-                                ${isDownloaded ? '✓ Saved Offline' : 'Ready to Download'}
+                                ${isDownloaded ? 'Saved Offline' : 'Ready to Download'}
                             </span>
                             <button class="btn btn-sm ${isDownloaded ? 'btn-secondary' : 'btn-primary'}" onclick="toggleDownloadResource('trans', '${t.id}', '${t.name}')">
-                                ${isDownloaded ? '✓ Installed' : '📥 Download'}
+                                ${isDownloaded ? 'Installed' : 'Download'}
                             </button>
                         </div>
                     </div>
@@ -2952,7 +3046,7 @@
                 return `
                     <div class="reciter-card">
                         <div class="reciter-header">
-                            <div class="reciter-icon">📚</div>
+                            <div class="reciter-icon"><svg class="app-icon"><use href="#icon-book"/></svg></div>
                             <div class="reciter-names">
                                 <h4>${t.name}</h4>
                                 <div class="reciter-style">${t.author} • ${t.size}</div>
@@ -2961,10 +3055,10 @@
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 6px 0;">${t.desc}</p>
                         <div class="reciter-card-actions">
                             <span class="reciter-badge ${isDownloaded ? 'downloaded' : 'cloud'}">
-                                ${isDownloaded ? '✓ Saved Offline' : 'Ready to Download'}
+                                ${isDownloaded ? 'Saved Offline' : 'Ready to Download'}
                             </span>
                             <button class="btn btn-sm ${isDownloaded ? 'btn-secondary' : 'btn-primary'}" onclick="toggleDownloadResource('tafsir', '${t.id}', '${t.name}')">
-                                ${isDownloaded ? '✓ Installed' : '📥 Download'}
+                                ${isDownloaded ? 'Installed' : 'Download'}
                             </button>
                         </div>
                     </div>
@@ -2987,7 +3081,7 @@
                 showToast(`Saving ${name} for offline reading...`);
                 setTimeout(() => {
                     localStorage.setItem(key, 'true');
-                    showToast(`✓ ${name} downloaded & saved!`, 'success');
+                    showToast(`${name} downloaded and saved!`, 'success');
                     if (type === 'trans') renderTranslationsList();
                     else renderTafsirList();
                     updateStorageBadge();
@@ -3193,8 +3287,16 @@
                 window.switchDownloadsTab('audio');
             });
 
-            // Senior-Friendly Audio Prompt Modal Listeners
+            // Audio Recitation Prompt Modal Listeners
             dom.promptCloseBtn?.addEventListener('click', closeAudioPromptModal);
+
+            dom.promptReciterSelect?.addEventListener('change', async (e) => {
+                const newReciter = e.target.value;
+                appState.currentReciter = newReciter;
+                localStorage.setItem('quran_reciter', newReciter);
+                if (dom.quickReciterSelect) dom.quickReciterSelect.value = newReciter;
+                await updatePromptModalStatus();
+            });
 
             dom.promptPlayOnlineBtn?.addEventListener('click', () => {
                 if (dom.promptRememberChoice?.checked) {
@@ -3206,10 +3308,23 @@
                 playVerseAudioDirect(target.surah, target.verse, false);
             });
 
-            dom.promptDownloadAndPlayBtn?.addEventListener('click', () => {
+            dom.promptDownloadAndPlayBtn?.addEventListener('click', async () => {
                 const target = appState.pendingPromptVerse || { surah: appState.currentSurah, verse: appState.currentVerse };
-                const reciterId = appState.currentReciter;
+                const reciterId = dom.promptReciterSelect ? dom.promptReciterSelect.value : appState.currentReciter;
                 const meta = window.OfflineQuranDB.getSurahMeta(target.surah);
+
+                let isDownloaded = false;
+                try {
+                    isDownloaded = await window.OfflineStorageEngine.isSurahDownloaded(reciterId, target.surah);
+                } catch (e) {
+                    console.warn(e);
+                }
+
+                if (isDownloaded) {
+                    closeAudioPromptModal();
+                    playVerseAudioDirect(target.surah, target.verse, true);
+                    return;
+                }
 
                 dom.promptDlProgressBar.style.display = 'block';
                 dom.promptDlStatusText.style.display = 'block';
@@ -3224,7 +3339,7 @@
                         dom.promptDlStatusText.textContent = `Downloading: ${percent}%`;
                     },
                     async () => {
-                        showToast(`✓ Surah ${meta.name} downloaded! Playing now...`, 'success');
+                        showToast(`Surah ${meta ? meta.name : target.surah} downloaded! Playing now...`, 'success');
                         closeAudioPromptModal();
                         await renderSurahDownloadList(dom.dlSurahSearchInput ? dom.dlSurahSearchInput.value : '');
                         await renderRecitersGrid();
@@ -3238,18 +3353,6 @@
                         dom.promptDlProgressBar.style.display = 'none';
                     }
                 );
-            });
-
-            dom.promptOpenDownloadsBtn?.addEventListener('click', () => {
-                closeAudioPromptModal();
-                showSection('downloads');
-                window.switchDownloadsTab('audio');
-            });
-
-            dom.promptChangeReciterBtn?.addEventListener('click', () => {
-                closeAudioPromptModal();
-                showSection('downloads');
-                window.switchDownloadsTab('audio');
             });
 
             // Downloads Section Actions
@@ -3286,9 +3389,9 @@
                         dom.juz30ProgressText.textContent = `Downloading Surah ${m ? m.name : curr} (${done}/${total})... ${pct}%`;
                     },
                     async () => {
-                        showToast('✓ Juz 30 (37 Surahs) downloaded successfully!', 'success');
+                        showToast('Juz 30 (37 Surahs) downloaded successfully!', 'success');
                         dom.juz30ProgressFill.style.width = '100%';
-                        dom.juz30ProgressText.textContent = '✓ Juz 30 Download Complete!';
+                        dom.juz30ProgressText.textContent = 'Juz 30 Download Complete!';
                         setTimeout(() => {
                             dom.juz30ProgressBar.style.display = 'none';
                             dom.juz30ProgressText.style.display = 'none';

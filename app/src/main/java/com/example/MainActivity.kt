@@ -4,9 +4,13 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.webkit.ConsoleMessage
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.ServiceWorkerClient
 import android.webkit.ServiceWorkerController
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
@@ -29,12 +33,28 @@ import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
 
+  companion object {
+    init {
+      try {
+        android.system.Os.setenv("MESA_LOG_FILE", "/dev/null", true)
+        android.system.Os.setenv("LIBGL_ALWAYS_SOFTWARE", "1", true)
+      } catch (_: Throwable) {}
+    }
+  }
+
   private var webView: WebView? = null
 
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+
+    try {
+      val jsCache = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/js")
+      if (!jsCache.exists()) jsCache.mkdirs()
+      val wasmCache = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/wasm")
+      if (!wasmCache.exists()) wasmCache.mkdirs()
+    } catch (_: Throwable) {}
 
     val assetsHandler = WebViewAssetLoader.AssetsPathHandler(this)
     val safePathHandler = WebViewAssetLoader.PathHandler { path ->
@@ -132,20 +152,16 @@ fun QuranWebView(
           mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
 
-        // Fallback to software layer in emulator environments to prevent MESA rendernode failure
-        val isEmulator = Build.FINGERPRINT.startsWith("generic") ||
-          Build.FINGERPRINT.startsWith("unknown") ||
-          Build.MODEL.contains("google_sdk") ||
-          Build.MODEL.contains("Emulator") ||
-          Build.MODEL.contains("Android SDK built for x86") ||
-          Build.MANUFACTURER.contains("Genymotion") ||
-          Build.HARDWARE.contains("goldfish") ||
-          Build.HARDWARE.contains("ranchu") ||
-          Build.PRODUCT.contains("sdk") ||
-          Build.PRODUCT.contains("google_sdk")
+        // Use default layer type so WebView uses its own internal compositor
+        setLayerType(View.LAYER_TYPE_NONE, null)
 
-        if (isEmulator) {
-          setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+        webChromeClient = object : WebChromeClient() {
+          override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+            consoleMessage?.let {
+              Log.d("QuranWebView", "${it.message()} [${it.sourceId()}:${it.lineNumber()}]")
+            }
+            return true
+          }
         }
 
         webViewClient = object : WebViewClientCompat() {
@@ -154,6 +170,13 @@ fun QuranWebView(
             request: WebResourceRequest
           ): WebResourceResponse? {
             return onRequestIntercept(request.url)
+          }
+
+          override fun onRenderProcessGone(
+            view: WebView,
+            detail: RenderProcessGoneDetail
+          ): Boolean {
+            return true
           }
         }
 
