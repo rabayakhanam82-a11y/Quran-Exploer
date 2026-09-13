@@ -1,0 +1,7 @@
+{
+  "name": "Quran Explorer",
+  "description": "Complete offline Quran application with Arabic recitation, word-by-word analysis, translations, tafsir, bookmarks, prayer tracker, and service worker caching.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
