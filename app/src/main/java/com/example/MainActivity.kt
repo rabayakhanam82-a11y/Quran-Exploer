@@ -91,14 +91,20 @@ class MainActivity : ComponentActivity() {
 
     onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
       override fun handleOnBackPressed() {
-        webView?.let { wv ->
-          if (wv.canGoBack()) {
-            wv.goBack()
-          } else {
-            isEnabled = false
-            onBackPressedDispatcher.onBackPressed()
+        val wv = webView
+        if (wv != null) {
+          wv.evaluateJavascript("(function(){ try { if (typeof window.handleAndroidBack === 'function') { return window.handleAndroidBack(); } } catch(e){} return false; })()") { result ->
+            val handled = result == "true" || result == "\"true\""
+            if (!handled) {
+              if (wv.canGoBack()) {
+                wv.goBack()
+              } else {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+              }
+            }
           }
-        } ?: run {
+        } else {
           isEnabled = false
           onBackPressedDispatcher.onBackPressed()
         }

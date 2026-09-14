@@ -2445,6 +2445,12 @@
                                 <button class="verse-action-btn" onclick="playVerseAudio(${v.verse_number})" title="Play Recitation">
                                     <svg class="app-icon"><use href="#icon-play"/></svg>
                                 </button>
+                                <button class="verse-action-btn" onclick="openVerseWbw(${surahNum}, ${v.verse_number})" title="Word by Word Breakdown">
+                                    <svg class="app-icon"><use href="#icon-book-open"/></svg>
+                                </button>
+                                <button class="verse-action-btn" onclick="openVerseTafsir(${surahNum}, ${v.verse_number})" title="Ayah Commentary / Tafsir">
+                                    <svg class="app-icon"><use href="#icon-book"/></svg>
+                                </button>
                                 <button class="verse-action-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark(${surahNum}, ${v.verse_number}, this)" title="Bookmark">
                                     <svg class="app-icon"><use href="#icon-bookmark"/></svg>
                                 </button>
@@ -2568,7 +2574,7 @@
             }
         }
 
-        function playVerseAudioDirect(surahNum, verseNum, isOffline) {
+        async function playVerseAudioDirect(surahNum, verseNum, isOffline) {
             appState.currentSurah = surahNum;
             appState.currentVerse = verseNum;
             const reciterId = appState.currentReciter;
@@ -2576,8 +2582,16 @@
             const reciterName = reciter ? reciter.name : 'Reciter';
             const meta = window.OfflineQuranDB.getSurahMeta(surahNum);
 
-            dom.audioTitle.textContent = meta ? meta.name : `Surah ${surahNum}`;
-            dom.audioSubtitle.textContent = `Ayah ${verseNum} • ${reciterName}`;
+            if (dom.audioTitle) dom.audioTitle.textContent = meta ? meta.name : `Surah ${surahNum}`;
+            if (dom.audioSubtitle) dom.audioSubtitle.textContent = `Ayah ${verseNum} • ${reciterName}`;
+
+            if (isOffline === undefined && window.OfflineStorageEngine) {
+                try {
+                    isOffline = await window.OfflineStorageEngine.isSurahDownloaded(reciterId, surahNum);
+                } catch(e) {
+                    isOffline = false;
+                }
+            }
 
             if (dom.barAudioStatusBadge) {
                 if (isOffline) {
@@ -3598,14 +3612,71 @@
             }
         };
 
+        window.openVerseWbw = function(surah, verse) {
+            appState.currentSurah = surah;
+            appState.currentVerse = verse;
+            showSection('wordbyword');
+            const wbwSurah = document.getElementById('wbwSurahSelect');
+            const wbwVerse = document.getElementById('wbwVerseSelect');
+            if (wbwSurah) wbwSurah.value = String(surah);
+            const meta = window.OfflineQuranDB.getSurahMeta(surah);
+            if (meta && wbwVerse) {
+                let opts = '';
+                for (let i = 1; i <= meta.verses; i++) opts += `<option value="${i}">${i}</option>`;
+                wbwVerse.innerHTML = opts;
+                wbwVerse.value = String(verse);
+            }
+            renderWbwView(surah, verse);
+        };
+
+        window.openVerseTafsir = function(surah, verse) {
+            appState.currentSurah = surah;
+            appState.currentVerse = verse;
+            showSection('tafsir');
+            const tafsirSurah = document.getElementById('tafsirSurahSelect');
+            const tafsirVerse = document.getElementById('tafsirVerseSelect');
+            if (tafsirSurah) tafsirSurah.value = String(surah);
+            const meta = window.OfflineQuranDB.getSurahMeta(surah);
+            if (meta && tafsirVerse) {
+                let opts = '';
+                for (let i = 1; i <= meta.verses; i++) opts += `<option value="${i}">${i}</option>`;
+                tafsirVerse.innerHTML = opts;
+                tafsirVerse.value = String(verse);
+            }
+            renderTafsirView(surah, verse);
+        };
+
+        window.handleAndroidBack = function() {
+            if (appState.audioPromptOpen) {
+                closeAudioPromptModal();
+                return true;
+            }
+            if (dom.sidebar && dom.sidebar.classList.contains('open')) {
+                dom.sidebar.classList.remove('open');
+                if (dom.overlay) dom.overlay.classList.remove('show');
+                return true;
+            }
+            if (dom.quickSettingsDropdown && dom.quickSettingsDropdown.classList.contains('show')) {
+                dom.quickSettingsDropdown.classList.remove('show');
+                return true;
+            }
+            if (appState.sectionHistory && appState.sectionHistory.length > 1) {
+                goBack();
+                return true;
+            }
+            if (appState.currentSection !== 'home') {
+                showSection('home');
+                return true;
+            }
+            return false;
+        };
+
         function initWordByWordView() {
             const wbwSurah = document.getElementById('wbwSurahSelect');
             const wbwVerse = document.getElementById('wbwVerseSelect');
             if (!wbwSurah || !wbwVerse) return;
 
-            if (!wbwSurah.value) {
-                wbwSurah.value = String(appState.currentSurah || 1);
-            }
+            wbwSurah.value = String(appState.currentSurah || 1);
             const surahNum = Number(wbwSurah.value) || 1;
             const meta = window.OfflineQuranDB.getSurahMeta(surahNum);
             if (meta) {
@@ -3651,9 +3722,7 @@
             const tafsirVerse = document.getElementById('tafsirVerseSelect');
             if (!tafsirSurah || !tafsirVerse) return;
 
-            if (!tafsirSurah.value) {
-                tafsirSurah.value = String(appState.currentSurah || 1);
-            }
+            tafsirSurah.value = String(appState.currentSurah || 1);
             const surahNum = Number(tafsirSurah.value) || 1;
             const meta = window.OfflineQuranDB.getSurahMeta(surahNum);
             if (meta) {

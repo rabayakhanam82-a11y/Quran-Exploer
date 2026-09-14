@@ -1,5 +1,5 @@
 // Quran Explorer - Offline Service Worker
-const CACHE_NAME = 'quran-explorer-offline-v4';
+const CACHE_NAME = 'quran-explorer-offline-v5';
 const CORE_ASSETS = [
   './index.html',
   './manifest.json',
