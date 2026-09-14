@@ -21,7 +21,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -141,7 +141,7 @@ fun QuranWebView(
   AndroidView(
     modifier = modifier
       .fillMaxSize()
-      .statusBarsPadding()
+      .safeDrawingPadding()
       .imePadding(),
     factory = { context ->
       WebView(context).apply {

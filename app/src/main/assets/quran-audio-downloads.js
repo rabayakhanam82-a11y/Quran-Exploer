@@ -112,7 +112,7 @@
           return;
         }
 
-        const request = window.indexedDB.open(this.dbName, 2);
+        const request = window.indexedDB.open(this.dbName, 3);
 
         request.onupgradeneeded = (e) => {
           const db = e.target.result;
@@ -124,6 +124,9 @@
           }
           if (!db.objectStoreNames.contains('tafsir')) {
             db.createObjectStore('tafsir', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('wbw_audio')) {
+            db.createObjectStore('wbw_audio', { keyPath: 'id' });
           }
         };
 
@@ -264,6 +267,109 @@
       });
     }
 
+    getWordAudioKey(surahNum, verseNum, wordIndex) {
+      return `${Number(surahNum)}_${Number(verseNum)}_${Number(wordIndex)}`;
+    }
+
+    async saveWordAudio(surahNum, verseNum, wordIndex, blob, size) {
+      const db = await this.ensureReady();
+      if (!db) return false;
+
+      return new Promise((resolve, reject) => {
+        try {
+          const tx = db.transaction('wbw_audio', 'readwrite');
+          const store = tx.objectStore('wbw_audio');
+          const id = this.getWordAudioKey(surahNum, verseNum, wordIndex);
+          store.put({
+            id,
+            surahNum: Number(surahNum),
+            verseNum: Number(verseNum),
+            wordIndex: Number(wordIndex),
+            blob,
+            size: size || blob.size,
+            date: Date.now()
+          });
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = (e) => reject(e);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    async getWordAudioBlob(surahNum, verseNum, wordIndex) {
+      const db = await this.ensureReady();
+      if (!db) return null;
+
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction('wbw_audio', 'readonly');
+          const store = tx.objectStore('wbw_audio');
+          const req = store.get(this.getWordAudioKey(surahNum, verseNum, wordIndex));
+          req.onsuccess = () => {
+            if (req.result && req.result.blob) {
+              resolve(req.result.blob);
+            } else {
+              resolve(null);
+            }
+          };
+          req.onerror = () => resolve(null);
+        } catch (_) {
+          resolve(null);
+        }
+      });
+    }
+
+    async isWordAudioDownloaded(surahNum, verseNum, wordIndex) {
+      const db = await this.ensureReady();
+      if (!db) return false;
+
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction('wbw_audio', 'readonly');
+          const store = tx.objectStore('wbw_audio');
+          const req = store.get(this.getWordAudioKey(surahNum, verseNum, wordIndex));
+          req.onsuccess = () => resolve(!!req.result);
+          req.onerror = () => resolve(false);
+        } catch (_) {
+          resolve(false);
+        }
+      });
+    }
+
+    async getAllDownloadedWordAudio() {
+      const db = await this.ensureReady();
+      if (!db) return [];
+
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction('wbw_audio', 'readonly');
+          const store = tx.objectStore('wbw_audio');
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => resolve([]);
+        } catch (_) {
+          resolve([]);
+        }
+      });
+    }
+
+    async clearAllWordAudio() {
+      const db = await this.ensureReady();
+      if (!db) return;
+
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction('wbw_audio', 'readwrite');
+          tx.objectStore('wbw_audio').clear();
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        } catch (_) {
+          resolve(false);
+        }
+      });
+    }
+
     async deleteSurahAudio(reciterId, surahNum) {
       const db = await this.ensureReady();
       if (!db) return false;
@@ -299,10 +405,10 @@
 
       return new Promise((resolve) => {
         try {
-          const tx = db.transaction(['audio_surahs', 'translations', 'tafsir'], 'readwrite');
-          tx.objectStore('audio_surahs').clear();
-          tx.objectStore('translations').clear();
-          tx.objectStore('tafsir').clear();
+          const stores = ['audio_surahs', 'translations', 'tafsir'];
+          if (db.objectStoreNames.contains('wbw_audio')) stores.push('wbw_audio');
+          const tx = db.transaction(stores, 'readwrite');
+          stores.forEach(s => tx.objectStore(s).clear());
           tx.oncomplete = () => resolve(true);
           tx.onerror = () => resolve(false);
         } catch (_) {
@@ -646,12 +752,273 @@
     }
   }
 
+  // ========== WORD-BY-WORD AUDIO ENGINE ==========
+  class WordAudioEngine {
+    constructor(storageEngine) {
+      this.storage = storageEngine;
+      this.audio = new Audio();
+      this.audio.preload = 'auto';
+      this.isPlaying = false;
+      this.currentSurah = 1;
+      this.currentVerse = 1;
+      this.currentWordIdx = 0;
+      this.playbackRate = 1.0;
+      this.isSequencePlaying = false;
+      this.sequenceTimeout = null;
+      this.activeBlobUrl = null;
+      this.activeElement = null;
+      this.sequenceWordsCount = 0;
+      this.sequenceCurrentIndex = 0;
+      this.onStateChange = null;
+
+      this.audio.addEventListener('ended', () => {
+        this.clearActiveHighlight();
+        this.isPlaying = false;
+        if (this.isSequencePlaying) {
+          // Slight natural pause between words (120ms) for pleasant listening
+          this.sequenceTimeout = setTimeout(() => {
+            this.advanceSequence();
+          }, 120);
+        } else if (this.onStateChange) {
+          this.onStateChange({ status: 'idle' });
+        }
+      });
+
+      this.audio.addEventListener('error', (e) => {
+        console.warn('Word audio playback error:', e);
+        this.clearActiveHighlight();
+        this.isPlaying = false;
+        if (this.isSequencePlaying) {
+          this.advanceSequence();
+        } else if (this.onStateChange) {
+          this.onStateChange({ status: 'error', error: e });
+        }
+      });
+    }
+
+    clearActiveHighlight() {
+      if (this.activeElement) {
+        this.activeElement.classList.remove('word-playing');
+        this.activeElement = null;
+      }
+      document.querySelectorAll('.word-item.word-playing').forEach(el => el.classList.remove('word-playing'));
+    }
+
+    setPlaybackRate(rate) {
+      this.playbackRate = Number(rate) || 1.0;
+      this.audio.playbackRate = this.playbackRate;
+    }
+
+    getWordFilename(surah, verse, wordIndex) {
+      const sPad = String(surah).padStart(3, '0');
+      const vPad = String(verse).padStart(3, '0');
+      const wPad = String(wordIndex).padStart(3, '0');
+      return `${sPad}_${vPad}_${wPad}.mp3`;
+    }
+
+    async getWordAudioSource(surah, verse, wordIndex) {
+      const filename = this.getWordFilename(surah, verse, wordIndex);
+
+      // 1. Check offline IndexedDB blob
+      try {
+        const blob = await this.storage.getWordAudioBlob(surah, verse, wordIndex);
+        if (blob) {
+          if (this.activeBlobUrl) URL.revokeObjectURL(this.activeBlobUrl);
+          this.activeBlobUrl = URL.createObjectURL(blob);
+          return { src: this.activeBlobUrl, isOffline: true };
+        }
+      } catch (e) {
+        console.warn('IndexedDB word audio check error:', e);
+      }
+
+      // 2. Check pre-bundled asset in app bundle
+      const bundledAssetPath = `audio/wbw/${filename}`;
+      try {
+        const resp = await fetch(bundledAssetPath, { method: 'HEAD' });
+        if (resp.ok) {
+          return { src: bundledAssetPath, isOffline: true };
+        }
+      } catch (_) {}
+
+      // 3. Fallback online stream from verified Quran.com CDN
+      const cdnUrl = `https://audio.qurancdn.com/wbw/${filename}`;
+      // Proactively cache to IndexedDB for seamless subsequent offline usage
+      this.cacheWordToStorage(surah, verse, wordIndex, cdnUrl);
+      return { src: cdnUrl, isOffline: false };
+    }
+
+    async cacheWordToStorage(surah, verse, wordIndex, url) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const blob = await res.blob();
+          await this.storage.saveWordAudio(surah, verse, wordIndex, blob, blob.size);
+        }
+      } catch (_) {}
+    }
+
+    async playWord(surah, verse, wordIndex, element) {
+      this.clearActiveHighlight();
+      if (this.sequenceTimeout) clearTimeout(this.sequenceTimeout);
+
+      this.currentSurah = Number(surah);
+      this.currentVerse = Number(verse);
+      this.currentWordIdx = Number(wordIndex);
+
+      if (element) {
+        this.activeElement = element;
+        element.classList.add('word-playing');
+      }
+
+      const source = await this.getWordAudioSource(surah, verse, wordIndex);
+      this.audio.src = source.src;
+      this.audio.playbackRate = this.playbackRate;
+
+      try {
+        await this.audio.play();
+        this.isPlaying = true;
+        if (this.onStateChange) {
+          this.onStateChange({ status: 'playing', surah, verse, wordIndex, isOffline: source.isOffline });
+        }
+      } catch (err) {
+        console.warn('Single word play error:', err);
+        this.clearActiveHighlight();
+        this.isPlaying = false;
+        if (this.onStateChange) {
+          this.onStateChange({ status: 'error', error: err });
+        }
+      }
+    }
+
+    async playAyahWords(surah, verse, wordsCount, onWordStep, onFinished) {
+      this.stop();
+      this.currentSurah = Number(surah);
+      this.currentVerse = Number(verse);
+      this.sequenceWordsCount = Number(wordsCount) || 1;
+      this.sequenceCurrentIndex = 0;
+      this.isSequencePlaying = true;
+      this.onWordStep = onWordStep;
+      this.onFinished = onFinished;
+      this.advanceSequence();
+    }
+
+    async advanceSequence() {
+      if (!this.isSequencePlaying) return;
+
+      if (this.sequenceCurrentIndex >= this.sequenceWordsCount) {
+        this.stop();
+        if (this.onFinished) this.onFinished();
+        return;
+      }
+
+      this.sequenceCurrentIndex++;
+      const wIdx = this.sequenceCurrentIndex;
+      const el = document.getElementById(`wbw-card-${wIdx}`) || document.querySelector(`[data-word-idx="${wIdx}"]`);
+
+      if (this.onWordStep) {
+        this.onWordStep(wIdx, this.sequenceWordsCount, el);
+      }
+
+      this.currentSurah = this.currentSurah;
+      this.currentVerse = this.currentVerse;
+      this.currentWordIdx = wIdx;
+
+      this.clearActiveHighlight();
+      if (el) {
+        this.activeElement = el;
+        el.classList.add('word-playing');
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
+
+      const source = await this.getWordAudioSource(this.currentSurah, this.currentVerse, wIdx);
+      this.audio.src = source.src;
+      this.audio.playbackRate = this.playbackRate;
+
+      try {
+        await this.audio.play();
+        this.isPlaying = true;
+      } catch (err) {
+        console.warn('Sequence word play error:', err);
+        this.clearActiveHighlight();
+        // Continue to next word even if one fails
+        this.advanceSequence();
+      }
+    }
+
+    pause() {
+      this.isSequencePlaying = false;
+      if (this.sequenceTimeout) clearTimeout(this.sequenceTimeout);
+      this.audio.pause();
+      this.isPlaying = false;
+      this.clearActiveHighlight();
+      if (this.onStateChange) this.onStateChange({ status: 'paused' });
+    }
+
+    resume() {
+      if (this.audio.src) {
+        this.audio.play().then(() => {
+          this.isPlaying = true;
+          if (this.onStateChange) this.onStateChange({ status: 'playing' });
+        }).catch(err => console.warn('Word audio resume error:', err));
+      }
+    }
+
+    stop() {
+      this.isSequencePlaying = false;
+      if (this.sequenceTimeout) clearTimeout(this.sequenceTimeout);
+      this.audio.pause();
+      this.audio.currentTime = 0;
+      this.isPlaying = false;
+      this.clearActiveHighlight();
+      if (this.onStateChange) this.onStateChange({ status: 'stopped' });
+    }
+
+    async downloadSurahWords(surah, onProgress) {
+      const meta = window.OfflineQuranDB ? window.OfflineQuranDB.getSurahMeta(surah) : null;
+      if (!meta) return false;
+
+      let totalWords = 0;
+      const verses = [];
+      for (let v = 1; v <= meta.verses; v++) {
+        const verseData = window.OfflineQuranDB.getVerseByKey(`${surah}:${v}`);
+        const count = (verseData && verseData.words) ? verseData.words.length : 0;
+        verses.push({ verse: v, count });
+        totalWords += count;
+      }
+
+      let downloaded = 0;
+      for (const item of verses) {
+        for (let w = 1; w <= item.count; w++) {
+          const isDown = await this.storage.isWordAudioDownloaded(surah, item.verse, w);
+          if (!isDown) {
+            const filename = this.getWordFilename(surah, item.verse, w);
+            const url = `https://audio.qurancdn.com/wbw/${filename}`;
+            try {
+              const res = await fetch(url);
+              if (res.ok) {
+                const blob = await res.blob();
+                await this.storage.saveWordAudio(surah, item.verse, w, blob, blob.size);
+              }
+            } catch (err) {
+              console.warn(`Word download failed ${surah}:${item.verse}:${w}`, err);
+            }
+          }
+          downloaded++;
+          if (onProgress) onProgress(downloaded, totalWords);
+        }
+      }
+      return true;
+    }
+  }
+
   const audioEngineInstance = new UnifiedAudioEngine();
+  const wordAudioEngineInstance = new WordAudioEngine(offlineStorage);
 
   // Export to Global Scope with all expected aliases
   window.QuranDownloadManager = DownloadManager;
   window.OfflineStorageEngine = offlineStorage;
   window.QuranAudioEngine = audioEngineInstance;
   window.UnifiedAudioEngine = audioEngineInstance;
+  window.WordAudioEngine = wordAudioEngineInstance;
 
 })(window);

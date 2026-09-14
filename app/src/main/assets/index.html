@@ -100,7 +100,7 @@
         }
 
         body.in-read-section {
-            padding-bottom: 80px;
+            padding-bottom: 104px;
         }
 
         /* SVG Icon styling */
@@ -750,43 +750,153 @@
             font-size: 0.95rem;
         }
 
-        /* Word by word */
+        /* Word by word Enhanced Layout & Audio States */
         .word-by-word-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
             direction: rtl;
-            margin-bottom: 16px;
-            padding: 14px;
-            background: var(--bg-tertiary);
-            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: color-mix(in srgb, var(--bg-tertiary) 75%, transparent);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+            max-height: 72vh;
+            -webkit-overflow-scrolling: touch;
         }
 
         .word-item {
             text-align: center;
-            padding: 10px;
+            padding: 12px 10px;
             background: var(--card-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            border: 1.5px solid var(--border-color);
             cursor: pointer;
+            position: relative;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+            box-shadow: 0 2px 8px var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 116px;
+        }
+
+        .word-item:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--shadow-soft);
+        }
+
+        .word-item:active {
+            transform: scale(0.97);
+        }
+
+        .word-item.word-playing {
+            border-color: var(--gold) !important;
+            background: linear-gradient(160deg, color-mix(in srgb, var(--gold) 24%, var(--card-bg)), var(--card-bg)) !important;
+            box-shadow: 0 0 0 3px var(--ring-gold), 0 8px 24px var(--shadow) !important;
+            transform: scale(1.04);
+            animation: wordPulseGlow 1.2s infinite alternate ease-in-out;
+            z-index: 2;
+        }
+
+        @keyframes wordPulseGlow {
+            0% { box-shadow: 0 0 0 2px var(--ring-gold), 0 0 10px rgba(212, 175, 55, 0.25); }
+            100% { box-shadow: 0 0 0 4px var(--ring-gold), 0 0 22px rgba(212, 175, 55, 0.55); }
+        }
+
+        .word-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            direction: ltr;
+        }
+
+        .word-idx-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .word-audio-play-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: color-mix(in srgb, var(--accent) 15%, transparent);
+            border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .word-item.word-playing .word-audio-play-icon {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold-light);
+            transform: scale(1.1);
         }
 
         .word-arabic {
-            font-family: 'Amiri', serif;
-            font-size: 1.4rem;
+            font-family: 'Amiri', 'Traditional Arabic', serif;
+            font-size: 1.55rem;
+            line-height: 1.55;
             color: var(--text-primary);
+            margin: 4px 0;
+            direction: rtl;
         }
 
         .word-transliteration {
-            font-size: 0.75rem;
+            font-size: 0.78rem;
+            font-weight: 600;
             color: var(--gold);
             direction: ltr;
+            margin-bottom: 2px;
         }
 
         .word-translation {
             font-size: 0.75rem;
             color: var(--text-secondary);
             direction: ltr;
+            line-height: 1.25;
+        }
+
+        /* Word by Word Toolbar */
+        .wbw-toolbar {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .wbw-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .wbw-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         /* Fixed Bottom Audio Bar */
@@ -978,12 +1088,14 @@
             bottom: 92px;
         }
 
-        @media (max-width: 768px) {
+        /* ========== RESPONSIVE ORIENTATION & SCROLL MANAGEMENT ========== */
+        /* Portrait Mobile Adjustments */
+        @media (max-width: 768px) and (orientation: portrait) {
             .bottom-audio-bar {
                 height: auto;
                 flex-wrap: wrap;
                 gap: 8px;
-                padding: 10px 14px;
+                padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
             }
             .audio-progress-container {
                 order: 3;
@@ -991,6 +1103,186 @@
                 margin: 0;
                 width: 100%;
             }
+        }
+
+        /* Landscape Mobile & Compact Height Devices */
+        @media (orientation: landscape) and (max-height: 640px) {
+            :root {
+                --top-bar-height: 48px;
+            }
+
+            body {
+                padding-top: 48px;
+                padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+
+            .top-bar {
+                height: 48px;
+                padding: 0 max(14px, env(safe-area-inset-left));
+            }
+
+            .top-bar-title {
+                font-size: 1.05rem;
+            }
+
+            .top-bar-actions {
+                gap: 6px;
+            }
+
+            .top-bar-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .bottom-audio-bar {
+                height: 52px !important;
+                flex-wrap: nowrap !important;
+                padding: 4px max(14px, env(safe-area-inset-left)) !important;
+                gap: 8px;
+            }
+
+            .audio-info {
+                min-width: 110px;
+                max-width: 170px;
+            }
+
+            .audio-title {
+                font-size: 0.82rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .audio-subtitle {
+                font-size: 0.72rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .audio-controls {
+                gap: 6px;
+            }
+
+            .audio-btn {
+                width: 34px;
+                height: 34px;
+            }
+
+            .audio-btn.play-btn {
+                width: 40px;
+                height: 40px;
+            }
+
+            .audio-progress-container {
+                order: unset !important;
+                margin: 0 10px !important;
+                flex: 1 !important;
+                min-width: 80px;
+            }
+
+            .audio-time {
+                font-size: 0.7rem;
+            }
+
+            /* Scrollable Modals and Drawers in Landscape */
+            .audio-prompt-overlay {
+                padding: 8px;
+                align-items: center;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .audio-prompt-box {
+                max-height: 92vh;
+                max-height: 92dvh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 14px 18px;
+                margin: auto;
+            }
+
+            .quick-settings-panel {
+                top: 48px;
+                max-height: calc(100vh - 48px);
+                max-height: calc(100dvh - 48px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .sidebar {
+                top: 48px;
+                height: calc(100vh - 48px);
+                height: calc(100dvh - 48px);
+            }
+
+            .sidebar-nav {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .word-by-word-container {
+                max-height: 56vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .word-item {
+                min-height: 100px;
+                padding: 8px 6px;
+            }
+
+            .word-arabic {
+                font-size: 1.35rem;
+            }
+
+            .wbw-toolbar {
+                padding: 8px 12px;
+                margin-bottom: 10px;
+            }
+
+            .surah-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 10px;
+            }
+
+            body.in-read-section {
+                padding-bottom: 64px !important;
+            }
+
+            #tafsirContainer {
+                max-height: 60vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .surah-dl-list {
+                max-height: 65vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .reciters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+
+            .table-responsive {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* General Table Responsiveness */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         /* Senior-Friendly Audio & Downloads Manager Styling */
         .downloads-banner {
@@ -2558,20 +2850,14 @@
             let isDownloaded = false;
             try {
                 if (window.OfflineStorageEngine) {
-                    isDownloaded = await window.OfflineStorageEngine.isSurahAudioDownloaded(reciterId, surahNum);
+                    isDownloaded = await window.OfflineStorageEngine.isSurahDownloaded(reciterId, surahNum);
                 }
             } catch (e) {
                 console.warn('Storage check error:', e);
             }
 
-            // If downloaded, or user explicitly selected "always stream", play immediately
-            const alwaysStream = localStorage.getItem('quran_stream_preferred') === 'true';
-            if (isDownloaded || alwaysStream) {
-                playVerseAudioDirect(surahNum, verseNum, isDownloaded);
-            } else {
-                // Show senior-friendly prompt modal
-                openAudioPromptModal(surahNum, verseNum);
-            }
+            // Directly play: lead to downloaded audio if available, and default to stream if not
+            playVerseAudioDirect(surahNum, verseNum, isDownloaded);
         }
 
         async function playVerseAudioDirect(surahNum, verseNum, isOffline) {
@@ -2585,10 +2871,14 @@
             if (dom.audioTitle) dom.audioTitle.textContent = meta ? meta.name : `Surah ${surahNum}`;
             if (dom.audioSubtitle) dom.audioSubtitle.textContent = `Ayah ${verseNum} • ${reciterName}`;
 
-            if (isOffline === undefined && window.OfflineStorageEngine) {
-                try {
-                    isOffline = await window.OfflineStorageEngine.isSurahDownloaded(reciterId, surahNum);
-                } catch(e) {
+            if (isOffline === undefined || isOffline === null) {
+                if (window.OfflineStorageEngine) {
+                    try {
+                        isOffline = await window.OfflineStorageEngine.isSurahDownloaded(reciterId, surahNum);
+                    } catch(e) {
+                        isOffline = false;
+                    }
+                } else {
                     isOffline = false;
                 }
             }
@@ -3601,7 +3891,34 @@
         }
 
         // ========== WORD BY WORD & TAFSIR VIEWS ==========
-        window.speakArabicWord = function(text) {
+        let wbwSequenceActive = false;
+
+        window.playWbwWordAudio = async function(surah, verse, wordIndex, wordElem) {
+            if (!window.WordAudioEngine) return;
+            // Clear any previous active playing highlight
+            document.querySelectorAll('.word-item.word-playing').forEach(el => el.classList.remove('word-playing'));
+            if (wordElem) {
+                wordElem.classList.add('word-playing');
+            }
+            try {
+                await window.WordAudioEngine.playWord(surah, verse, wordIndex, () => {
+                    if (wordElem) wordElem.classList.remove('word-playing');
+                });
+            } catch (e) {
+                console.warn('Word audio playback error:', e);
+                if (wordElem) wordElem.classList.remove('word-playing');
+            }
+        };
+
+        window.speakArabicWord = function(text, surah, verse, wordIndex, elem) {
+            if (surah && verse && wordIndex) {
+                window.playWbwWordAudio(surah, verse, wordIndex, elem);
+                return;
+            }
+            if (window.WordAudioEngine && appState.currentSurah && appState.currentVerse) {
+                window.playWbwWordAudio(appState.currentSurah, appState.currentVerse, 1, elem);
+                return;
+            }
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const clean = text.replace(/[\u06D6-\u06ED]/g, '');
@@ -3609,6 +3926,91 @@
                 utterance.lang = 'ar-SA';
                 utterance.rate = 0.85;
                 window.speechSynthesis.speak(utterance);
+            }
+        };
+
+        window.togglePlayAyahWords = async function(surah, verse, totalWords) {
+            if (!window.WordAudioEngine) return;
+            const btn = document.getElementById('btnPlayAllWords');
+            if (wbwSequenceActive) {
+                window.WordAudioEngine.stopSequence();
+                wbwSequenceActive = false;
+                if (btn) btn.innerHTML = `<svg class="app-icon"><use href="#icon-play"/></svg> Play Words`;
+                document.querySelectorAll('.word-item.word-playing').forEach(el => el.classList.remove('word-playing'));
+                return;
+            }
+
+            wbwSequenceActive = true;
+            if (btn) btn.innerHTML = `<svg class="app-icon"><use href="#icon-pause"/></svg> Stop Sequence`;
+
+            window.WordAudioEngine.playAyahWords(
+                surah,
+                verse,
+                totalWords,
+                (wordIdx) => {
+                    document.querySelectorAll('.word-item.word-playing').forEach(el => el.classList.remove('word-playing'));
+                    const targetCard = document.getElementById(`wbw-word-${surah}-${verse}-${wordIdx}`);
+                    if (targetCard) {
+                        targetCard.classList.add('word-playing');
+                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                },
+                () => {
+                    wbwSequenceActive = false;
+                    if (btn) btn.innerHTML = `<svg class="app-icon"><use href="#icon-play"/></svg> Play Words`;
+                    document.querySelectorAll('.word-item.word-playing').forEach(el => el.classList.remove('word-playing'));
+                }
+            );
+        };
+
+        window.changeWbwRate = function() {
+            if (!window.WordAudioEngine) return;
+            const rates = [1.0, 0.75, 1.25];
+            const current = window.WordAudioEngine.playbackRate || 1.0;
+            const nextIdx = (rates.indexOf(current) + 1) % rates.length;
+            const newRate = rates[nextIdx];
+            window.WordAudioEngine.setRate(newRate);
+            const btn = document.getElementById('btnWbwRate');
+            if (btn) btn.textContent = `${newRate}x Speed`;
+            showToast(`Word pronunciation speed: ${newRate}x`);
+        };
+
+        window.downloadCurrentSurahWbwWords = async function(surah) {
+            if (!window.WordAudioEngine) return;
+            const meta = window.OfflineQuranDB.getSurahMeta(surah);
+            const btn = document.getElementById('btnDlWbwSurah');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Downloading...';
+            }
+            showToast(`Downloading words for Surah ${meta ? meta.name : surah}...`);
+            try {
+                const verseWordCounts = [];
+                const maxV = meta ? meta.verses : 7;
+                for (let v = 1; v <= maxV; v++) {
+                    const verseObj = window.OfflineQuranDB.getVerseByKey(`${surah}:${v}`);
+                    const wCount = (verseObj && verseObj.words && verseObj.words.length > 0) ? verseObj.words.length : 4;
+                    verseWordCounts.push(wCount);
+                }
+
+                await window.WordAudioEngine.downloadSurahWords(surah, verseWordCounts, (done, total, pct) => {
+                    if (btn) btn.textContent = `${pct}% (${done}/${total})`;
+                });
+
+                if (btn) {
+                    btn.textContent = 'Words Saved ✓';
+                    btn.style.background = 'color-mix(in srgb, #22c55e 20%, transparent)';
+                    btn.style.borderColor = '#22c55e';
+                    btn.style.color = '#4ade80';
+                }
+                showToast(`All words for Surah ${meta ? meta.name : surah} saved offline!`, 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to download word audio: ' + e.message, 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Download Words';
+                }
             }
         };
 
@@ -3692,25 +4094,50 @@
         function renderWbwView(surah, verse) {
             const v = window.OfflineQuranDB.getVerseByKey(`${surah}:${verse}`);
             const meta = window.OfflineQuranDB.getSurahMeta(surah);
-            const words = (v && v.words) ? v.words : [];
+            const words = (v && v.words && v.words.length > 0) ? v.words : (
+                v && v.text_uthmani ? v.text_uthmani.split(/\s+/).map((w, idx) => ({
+                    text_uthmani: w,
+                    transliteration: `Word ${idx + 1}`,
+                    translation: `[${meta ? meta.name : 'Surah'} ${surah}:${verse}]`
+                })) : []
+            );
             const container = document.getElementById('wbwContainer');
             if (!container) return;
 
             container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-                    <div style="font-weight: 600; color: var(--gold-light);">
-                        ${meta ? meta.name : 'Surah'} ${surah}:${verse} • ${words.length} Words
+                <div class="wbw-toolbar">
+                    <div class="wbw-toolbar-left">
+                        <div style="font-weight: 700; color: var(--gold-light); font-size: 1.05rem;">
+                            ${meta ? meta.name : 'Surah'} ${surah}:${verse} • ${words.length} Words
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btnWbwRate" onclick="changeWbwRate()">
+                            ${(window.WordAudioEngine && window.WordAudioEngine.playbackRate) || 1.0}x Speed
+                        </button>
                     </div>
-                    <button class="btn btn-primary btn-sm" onclick="playVerseAudioDirect(${surah}, ${verse})">
-                        <svg class="app-icon"><use href="#icon-play"/></svg> Listen Ayah
-                    </button>
+                    <div class="wbw-toolbar-right">
+                        <button class="btn btn-primary btn-sm" id="btnPlayAllWords" onclick="togglePlayAyahWords(${surah}, ${verse}, ${words.length})">
+                            <svg class="app-icon"><use href="#icon-play"/></svg> Play Words
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="playVerseAudioDirect(${surah}, ${verse})">
+                            <svg class="app-icon"><use href="#icon-volume"/></svg> Full Ayah
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="btnDlWbwSurah" onclick="downloadCurrentSurahWbwWords(${surah})" title="Download words audio offline for this Surah">
+                            <svg class="app-icon"><use href="#icon-download"/></svg> Offline Words
+                        </button>
+                    </div>
                 </div>
                 <div class="word-by-word-container">
-                    ${words.map(w => `
-                        <div class="word-item" onclick="speakArabicWord('${w.text_uthmani.replace(/'/g, "\\'")}')" title="Tap to listen pronunciation">
+                    ${words.map((w, idx) => `
+                        <div class="word-item" id="wbw-word-${surah}-${verse}-${idx + 1}" onclick="playWbwWordAudio(${surah}, ${verse}, ${idx + 1}, this)" title="Tap to listen recitation">
+                            <div class="word-card-top">
+                                <span class="word-idx-badge">#${idx + 1}</span>
+                                <span class="word-audio-play-icon" title="Listen pronunciation">
+                                    <svg class="app-icon"><use href="#icon-play"/></svg>
+                                </span>
+                            </div>
                             <div class="word-arabic">${w.text_uthmani}</div>
-                            <div class="word-transliteration">${w.transliteration}</div>
-                            <div class="word-translation">${w.translation}</div>
+                            <div class="word-transliteration">${w.transliteration || ''}</div>
+                            <div class="word-translation">${w.translation || ''}</div>
                         </div>
                     `).join('')}
                 </div>
