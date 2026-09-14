@@ -2135,9 +2135,11 @@
             currentVerse: 1,
             isPlaying: false,
             repeatVerse: false,
-            currentScript: 'uthmani',
-            tajweedEnabled: true,
-            alwaysEnglish: true,
+            currentScript: localStorage.getItem('quran_script') || 'uthmani',
+            tajweedEnabled: localStorage.getItem('quran_tajweed') !== 'false',
+            tajweedMode: localStorage.getItem('quran_tajweed_mode') || 'basic',
+            alwaysEnglish: localStorage.getItem('quran_always_english') !== 'false',
+            selectedTranslation: localStorage.getItem('quran_translation') || '161',
             theme: localStorage.getItem('quran_theme') || 'dark',
             currentReciter: localStorage.getItem('quran_reciter') || 'ar.alafasy',
             dlFilter: 'all',
@@ -2167,6 +2169,7 @@
             quickDownloadShortcutBtn: document.getElementById('quickDownloadShortcutBtn'),
             quickDownloadShortcutText: document.getElementById('quickDownloadShortcutText'),
             quickScriptSelect: document.getElementById('quickScriptSelect'),
+            quickTranslationSelect: document.getElementById('quickTranslationSelect'),
             quickTajweedToggle: document.getElementById('quickTajweedToggle'),
             quickAlwaysEnglishToggle: document.getElementById('quickAlwaysEnglishToggle'),
             tajweedToggleBtn: document.getElementById('tajweedToggleBtn'),
@@ -2176,6 +2179,7 @@
             readPlayFullSurahBtn: document.getElementById('readPlayFullSurahBtn'),
             readDownloadSurahBtn: document.getElementById('readDownloadSurahBtn'),
             readDownloadBtnText: document.getElementById('readDownloadBtnText'),
+            backToSurahListBtn: document.getElementById('backToSurahListBtn'),
             startReadingBtn: document.getElementById('startReadingBtn'),
             readingSurahTitle: document.getElementById('readingSurahTitle'),
             versesContainer: document.getElementById('versesContainer'),
@@ -2203,6 +2207,14 @@
             goTopBtn: document.getElementById('goTopBtn'),
             qatarPrayersTable: document.getElementById('qatarPrayersTable'),
             prayerTable: document.getElementById('prayerTable'),
+            // Word by Word
+            wbwSurahSelect: document.getElementById('wbwSurahSelect'),
+            wbwVerseSelect: document.getElementById('wbwVerseSelect'),
+            wbwContainer: document.getElementById('wbwContainer'),
+            // Tafsir
+            tafsirSurahSelect: document.getElementById('tafsirSurahSelect'),
+            tafsirVerseSelect: document.getElementById('tafsirVerseSelect'),
+            tafsirContainer: document.getElementById('tafsirContainer'),
             // Prompt Modal
             audioPromptModal: document.getElementById('audioPromptModal'),
             promptSurahTitle: document.getElementById('promptSurahTitle'),
@@ -2234,9 +2246,16 @@
             tafsirDlContainer: document.getElementById('tafsirDlContainer')
         };
 
-        // ========== INITIALIZATION ==========
+        // ========== INIT APP ==========
         function initApp() {
             applyTheme(appState.theme);
+
+            if (dom.quickScriptSelect) dom.quickScriptSelect.value = appState.currentScript;
+            if (dom.quickTranslationSelect) dom.quickTranslationSelect.value = appState.selectedTranslation;
+            if (dom.quickTajweedToggle) dom.quickTajweedToggle.classList.toggle('active', appState.tajweedEnabled);
+            if (dom.tajweedToggleBtn) dom.tajweedToggleBtn.classList.toggle('active', appState.tajweedEnabled);
+            if (dom.quickAlwaysEnglishToggle) dom.quickAlwaysEnglishToggle.classList.toggle('active', appState.alwaysEnglish);
+
             populateSurahDropdowns();
             renderSurahList();
             renderJuzList();
@@ -2244,10 +2263,21 @@
             renderPrayerTracker();
             renderBookmarks();
             updateDashboard();
+            updateContinueReading();
             initDownloadsUI();
 
-            // Load Surah 1 by default
-            loadSurah(1, false);
+            // Load saved session or Surah 1
+            const savedSession = localStorage.getItem('quran_session');
+            let initialSurah = 1;
+            let initialVerse = 1;
+            if (savedSession) {
+                try {
+                    const parsed = JSON.parse(savedSession);
+                    if (parsed.surah) initialSurah = Number(parsed.surah);
+                    if (parsed.verse) initialVerse = Number(parsed.verse);
+                } catch(e) {}
+            }
+            loadSurah(initialSurah, false, initialVerse);
 
             setupEventListeners();
         }
@@ -2257,7 +2287,9 @@
             appState.theme = theme;
             document.body.setAttribute('data-theme', theme);
             localStorage.setItem('quran_theme', theme);
-            dom.themeIcon.innerHTML = `<use href="#icon-${theme === 'dark' ? 'sun' : 'moon'}"/>`;
+            if (dom.themeIcon) {
+                dom.themeIcon.innerHTML = `<use href="#icon-${theme === 'dark' ? 'sun' : 'moon'}"/>`;
+            }
         }
 
         // ========== NAVIGATION ==========
@@ -2276,11 +2308,32 @@
             });
 
             document.body.classList.toggle('in-read-section', sectionId === 'read');
-            dom.sidebar.classList.remove('open');
-            dom.overlay.classList.remove('show');
+            if (dom.sidebar) dom.sidebar.classList.remove('open');
+            if (dom.overlay) dom.overlay.classList.remove('show');
 
-            dom.sectionBackBtn.disabled = appState.sectionHistory.length <= 1;
+            if (dom.sectionBackBtn) {
+                dom.sectionBackBtn.disabled = appState.sectionHistory.length <= 1;
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Section Refresh triggers
+            if (sectionId === 'wordbyword') {
+                initWordByWordView();
+            } else if (sectionId === 'tafsir') {
+                initTafsirView();
+            } else if (sectionId === 'bookmarks') {
+                renderBookmarks();
+            } else if (sectionId === 'dashboard') {
+                updateDashboard();
+            } else if (sectionId === 'qatar-prayers') {
+                renderQatarPrayers();
+            } else if (sectionId === 'prayers') {
+                renderPrayerTracker();
+            } else if (sectionId === 'downloads') {
+                initDownloadsUI();
+            } else if (sectionId === 'home') {
+                updateContinueReading();
+            }
         }
 
         function goBack() {
@@ -2311,16 +2364,18 @@
             const filtered = surahs.filter(s =>
                 s.name.toLowerCase().includes(filter.toLowerCase()) ||
                 s.arabic.includes(filter) ||
+                (s.english && s.english.toLowerCase().includes(filter.toLowerCase())) ||
                 String(s.number).includes(filter)
             );
 
+            if (!dom.surahList) return;
             dom.surahList.innerHTML = filtered.map(s => `
                 <div class="surah-card" onclick="loadSurah(${s.number}, true)">
                     <div class="surah-num">${s.number}</div>
                     <div class="surah-info">
                         <div class="surah-name">${s.name}</div>
                         <div class="surah-arabic">${s.arabic}</div>
-                        <div class="surah-meta">${s.type === 'medinan' ? 'Medinan' : 'Meccan'} • ${s.verses} Verses</div>
+                        <div class="surah-meta">${s.revelation || (s.type === 'medinan' ? 'Medinan' : 'Meccan')} • ${s.verses} Verses</div>
                     </div>
                 </div>
             `).join('');
@@ -2329,6 +2384,7 @@
         // ========== JUZ LIST ==========
         function renderJuzList() {
             const juzs = window.OfflineQuranDB.getJuzList();
+            if (!dom.juzList) return;
             dom.juzList.innerHTML = juzs.map(j => `
                 <div class="surah-card" onclick="loadSurah(${j.surah}, true, ${j.verse})">
                     <div class="surah-num">${j.juz}</div>
@@ -2348,9 +2404,9 @@
 
             appState.currentSurah = surahNum;
             appState.currentVerse = scrollToVerse;
-            dom.readingSurahTitle.textContent = `${meta.number}. ${meta.name} (${meta.arabic})`;
-            dom.readSurahSelect.value = String(surahNum);
-            dom.quickSurahSelect.value = String(surahNum);
+            if (dom.readingSurahTitle) dom.readingSurahTitle.textContent = `${meta.number}. ${meta.name} (${meta.arabic})`;
+            if (dom.readSurahSelect) dom.readSurahSelect.value = String(surahNum);
+            if (dom.quickSurahSelect) dom.quickSurahSelect.value = String(surahNum);
 
             const verses = window.OfflineQuranDB.getVersesByChapter(surahNum);
             const isAtTawbah = surahNum === 9;
@@ -2364,6 +2420,10 @@
                     </div>
                 `;
             }
+
+            const showBengali = appState.selectedTranslation === '161';
+            const showUrdu = appState.selectedTranslation === '97';
+            const showFrench = appState.selectedTranslation === '234';
 
             html += verses.map(v => {
                 const isBookmarked = appState.bookmarks.some(b => b.surah === surahNum && b.verse === v.verse_number);
@@ -2397,16 +2457,28 @@
                             <div class="arabic-text ${appState.tajweedEnabled ? 'tajweed-enabled' : ''}">
                                 ${appState.tajweedEnabled && v.text_uthmani_tajweed ? v.text_uthmani_tajweed : arabicText}
                             </div>
-                            ${appState.alwaysEnglish ? `
+                            ${appState.alwaysEnglish && v.english ? `
                                 <div class="translation-text">
                                     <div class="translation-label">English Translation</div>
                                     ${v.english}
                                 </div>
                             ` : ''}
-                            ${v.bengali ? `
+                            ${showBengali && v.bengali ? `
                                 <div class="translation-text" style="border-left-color: var(--accent);">
-                                    <div class="translation-label" style="color: var(--accent);">বাংলা অনুবাদ</div>
+                                    <div class="translation-label" style="color: var(--accent);">বাংলা অনুবাদ (জাকারিয়া)</div>
                                     ${v.bengali}
+                                </div>
+                            ` : ''}
+                            ${showUrdu && v.urdu ? `
+                                <div class="translation-text" style="border-left-color: #38bdf8; direction: rtl; text-align: right; font-family: 'Amiri', serif;">
+                                    <div class="translation-label" style="color: #38bdf8; direction: ltr; text-align: left;">اردو ترجمہ (احمد علی)</div>
+                                    ${v.urdu}
+                                </div>
+                            ` : ''}
+                            ${showFrench && (v.french || v.english) ? `
+                                <div class="translation-text" style="border-left-color: #a855f7;">
+                                    <div class="translation-label" style="color: #a855f7;">Traduction Française</div>
+                                    ${v.french || v.english}
                                 </div>
                             ` : ''}
                         </div>
@@ -2414,12 +2486,12 @@
                 `;
             }).join('');
 
-            dom.versesContainer.innerHTML = html;
+            if (dom.versesContainer) dom.versesContainer.innerHTML = html;
 
-            dom.audioTitle.textContent = meta.name;
-            dom.audioSubtitle.textContent = `Verse ${scrollToVerse}`;
+            if (dom.audioTitle) dom.audioTitle.textContent = meta.name;
+            if (dom.audioSubtitle) dom.audioSubtitle.textContent = `Verse ${scrollToVerse}`;
             if (dom.readSurahSub) {
-                dom.readSurahSub.textContent = `${meta.english} • ${meta.verses} Verses • ${meta.revelation}`;
+                dom.readSurahSub.textContent = `${meta.english} • ${meta.verses} Verses • ${meta.revelation || 'Meccan'}`;
             }
 
             // Update read section download button status
@@ -2427,10 +2499,12 @@
                 window.OfflineStorageEngine.isSurahAudioDownloaded(appState.currentReciter, surahNum).then(isDl => {
                     if (isDl) {
                         dom.readDownloadBtnText.textContent = 'Audio Downloaded';
-                        dom.readDownloadSurahBtn.classList.remove('btn-primary');
-                        dom.readDownloadSurahBtn.classList.add('btn-secondary');
+                        dom.readDownloadSurahBtn?.classList.remove('btn-primary');
+                        dom.readDownloadSurahBtn?.classList.add('btn-secondary');
                     } else {
                         dom.readDownloadBtnText.textContent = 'Download Audio';
+                        dom.readDownloadSurahBtn?.classList.remove('btn-secondary');
+                        dom.readDownloadSurahBtn?.classList.add('btn-primary');
                     }
                 }).catch(() => {});
             }
@@ -2891,19 +2965,26 @@
         async function renderSurahDownloadList(query = '') {
             if (!dom.surahDlListContainer) return;
             const reciterId = appState.currentReciter;
-            const downloadedList = await window.OfflineStorageEngine.getDownloadedSurahsForReciter(reciterId);
-            const downloadedSet = new Set(downloadedList.map(item => typeof item === 'object' ? item.surahNum || item.surah : item));
+            let downloadedList = [];
+            try {
+                if (window.OfflineStorageEngine) {
+                    downloadedList = await window.OfflineStorageEngine.getDownloadedSurahsForReciter(reciterId);
+                }
+            } catch(e) {
+                console.warn(e);
+            }
+            const downloadedSet = new Set(downloadedList.map(item => typeof item === 'object' ? item.surahNum || item.surah : Number(item)));
 
-            let surahs = window.OfflineQuranDB.surahs;
+            let surahs = window.OfflineQuranDB.getSurahs();
             if (query.trim()) {
                 const q = query.trim().toLowerCase();
-                surahs = surahs.filter(s => s.name.toLowerCase().includes(q) || s.english.toLowerCase().includes(q) || String(s.id).includes(q));
+                surahs = surahs.filter(s => s.name.toLowerCase().includes(q) || (s.english && s.english.toLowerCase().includes(q)) || String(s.number).includes(q));
             }
 
             if (appState.dlFilter === 'downloaded') {
-                surahs = surahs.filter(s => downloadedSet.has(s.id));
+                surahs = surahs.filter(s => downloadedSet.has(s.number));
             } else if (appState.dlFilter === 'juz30') {
-                surahs = surahs.filter(s => s.id >= 78 && s.id <= 114);
+                surahs = surahs.filter(s => s.number >= 78 && s.number <= 114);
             }
 
             if (surahs.length === 0) {
@@ -2916,37 +2997,37 @@
             }
 
             dom.surahDlListContainer.innerHTML = surahs.map(s => {
-                const isDownloaded = downloadedSet.has(s.id);
+                const isDownloaded = downloadedSet.has(s.number);
                 return `
-                    <div class="surah-dl-row" id="surahDlRow-${s.id}">
+                    <div class="surah-dl-row" id="surahDlRow-${s.number}">
                         <div class="surah-dl-info">
-                            <div class="surah-dl-num">${s.id}</div>
+                            <div class="surah-dl-num">${s.number}</div>
                             <div>
                                 <span class="surah-dl-title-en">${s.name}</span>
                                 <span class="surah-dl-title-ar">${s.arabic}</span>
-                                <div class="surah-dl-sub">${s.verses} Verses • ${s.revelation}</div>
+                                <div class="surah-dl-sub">${s.verses} Verses • ${s.revelation || (s.type === 'medinan' ? 'Medinan' : 'Meccan')}</div>
                             </div>
                         </div>
-                        <div class="surah-dl-actions" id="surahDlActions-${s.id}">
+                        <div class="surah-dl-actions" id="surahDlActions-${s.number}">
                             ${isDownloaded ? `
                                 <span class="reciter-badge downloaded">Downloaded</span>
-                                <button class="btn btn-primary btn-sm" onclick="playVerseAudioDirect(${s.id}, 1, true)" title="Play offline audio">
+                                <button class="btn btn-primary btn-sm" onclick="playVerseAudioDirect(${s.number}, 1, true)" title="Play offline audio">
                                     <svg class="app-icon"><use href="#icon-play"/></svg> Play
                                 </button>
-                                <button class="btn btn-secondary btn-sm" onclick="deleteSurahAudio(${s.id})" title="Delete offline file" style="color: #ef4444;">
+                                <button class="btn btn-secondary btn-sm" onclick="deleteSurahAudio(${s.number})" title="Delete offline file" style="color: #ef4444;">
                                     <svg class="app-icon"><use href="#icon-trash"/></svg>
                                 </button>
                             ` : `
-                                <button class="btn btn-primary btn-sm" onclick="startSurahDownload(${s.id})" id="btnDlSurah-${s.id}">
+                                <button class="btn btn-primary btn-sm" onclick="startSurahDownload(${s.number})" id="btnDlSurah-${s.number}">
                                     <svg class="app-icon"><use href="#icon-download"/></svg> Download
                                 </button>
-                                <button class="btn btn-secondary btn-sm" onclick="playVerseAudioDirect(${s.id}, 1, false)" title="Listen online now">
+                                <button class="btn btn-secondary btn-sm" onclick="playVerseAudioDirect(${s.number}, 1, false)" title="Listen online now">
                                     <svg class="app-icon"><use href="#icon-play"/></svg> Stream
                                 </button>
                             `}
                         </div>
-                        <div class="surah-dl-progress-bar" id="progressBar-${s.id}">
-                            <div class="surah-dl-progress-fill" id="progressFill-${s.id}"></div>
+                        <div class="surah-dl-progress-bar" id="progressBar-${s.number}">
+                            <div class="surah-dl-progress-fill" id="progressFill-${s.number}"></div>
                         </div>
                     </div>
                 `;
@@ -3181,6 +3262,43 @@
                 loadSurah(appState.currentSurah, false, appState.currentVerse);
             });
 
+            dom.quickTranslationSelect?.addEventListener('change', (e) => {
+                appState.selectedTranslation = e.target.value;
+                localStorage.setItem('quran_translation', e.target.value);
+                loadSurah(appState.currentSurah, false, appState.currentVerse);
+            });
+
+            document.getElementById('quickTajweedBasicBtn')?.addEventListener('click', () => {
+                document.getElementById('quickTajweedBasicBtn')?.classList.add('active');
+                document.getElementById('quickTajweedAdvancedBtn')?.classList.remove('active');
+                appState.tajweedEnabled = true;
+                appState.tajweedMode = 'basic';
+                localStorage.setItem('quran_tajweed', 'true');
+                localStorage.setItem('quran_tajweed_mode', 'basic');
+                dom.quickTajweedToggle?.classList.add('active');
+                dom.tajweedToggleBtn?.classList.add('active');
+                loadSurah(appState.currentSurah, false, appState.currentVerse);
+                showToast('Tajweed: Basic Rules Mode');
+            });
+
+            document.getElementById('quickTajweedAdvancedBtn')?.addEventListener('click', () => {
+                document.getElementById('quickTajweedAdvancedBtn')?.classList.add('active');
+                document.getElementById('quickTajweedBasicBtn')?.classList.remove('active');
+                appState.tajweedEnabled = true;
+                appState.tajweedMode = 'advanced';
+                localStorage.setItem('quran_tajweed', 'true');
+                localStorage.setItem('quran_tajweed_mode', 'advanced');
+                dom.quickTajweedToggle?.classList.add('active');
+                dom.tajweedToggleBtn?.classList.add('active');
+                loadSurah(appState.currentSurah, false, appState.currentVerse);
+                showToast('Tajweed: Full Color Rules Mode');
+            });
+
+            document.getElementById('quickTajweedGuideBtn')?.addEventListener('click', () => {
+                dom.quickSettingsDropdown?.classList.remove('show');
+                showSection('tajweed-guide');
+            });
+
             dom.startReadingBtn.addEventListener('click', () => {
                 const val = Number(dom.quickSurahSelect.value || 1);
                 loadSurah(val, true);
@@ -3191,7 +3309,7 @@
                 if (val) loadSurah(val, true);
             });
 
-            dom.backToSurahListBtn.addEventListener('click', () => showSection('surahs'));
+            dom.backToSurahListBtn?.addEventListener('click', () => showSection('surahs'));
 
             document.getElementById('gotoVerseBtn').addEventListener('click', () => {
                 const v = Number(document.getElementById('gotoVerseInput').value);
@@ -3268,7 +3386,7 @@
 
             dom.nextVerseBtn.addEventListener('click', () => {
                 const meta = window.OfflineQuranDB.getSurahMeta(appState.currentSurah);
-                if (appState.currentVerse < meta.verses) {
+                if (meta && appState.currentVerse < meta.verses) {
                     playVerseAudio(appState.currentVerse + 1);
                 }
             });
@@ -3285,6 +3403,14 @@
             dom.barAudioStatusBadge?.addEventListener('click', () => {
                 showSection('downloads');
                 window.switchDownloadsTab('audio');
+            });
+
+            dom.audioProgress?.addEventListener('click', (e) => {
+                const rect = dom.audioProgress.getBoundingClientRect();
+                const fraction = (e.clientX - rect.left) / rect.width;
+                if (window.UnifiedAudioEngine) {
+                    window.UnifiedAudioEngine.seek(fraction);
+                }
             });
 
             // Audio Recitation Prompt Modal Listeners
@@ -3432,7 +3558,7 @@
             // Word by Word Selectors
             const wbwSurah = document.getElementById('wbwSurahSelect');
             const wbwVerse = document.getElementById('wbwVerseSelect');
-            wbwSurah.addEventListener('change', () => {
+            wbwSurah?.addEventListener('change', () => {
                 const meta = window.OfflineQuranDB.getSurahMeta(wbwSurah.value);
                 if (!meta) return;
                 let opts = '';
@@ -3440,30 +3566,14 @@
                 wbwVerse.innerHTML = opts;
                 renderWbwView(Number(wbwSurah.value), 1);
             });
-            wbwVerse.addEventListener('change', () => {
+            wbwVerse?.addEventListener('change', () => {
                 renderWbwView(Number(wbwSurah.value), Number(wbwVerse.value));
             });
-
-            function renderWbwView(surah, verse) {
-                const v = window.OfflineQuranDB.getVerseByKey(`${surah}:${verse}`);
-                const words = v.words || [];
-                document.getElementById('wbwContainer').innerHTML = `
-                    <div class="word-by-word-container">
-                        ${words.map(w => `
-                            <div class="word-item">
-                                <div class="word-arabic">${w.text_uthmani}</div>
-                                <div class="word-transliteration">${w.transliteration}</div>
-                                <div class="word-translation">${w.translation}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
 
             // Tafsir Selectors
             const tafsirSurah = document.getElementById('tafsirSurahSelect');
             const tafsirVerse = document.getElementById('tafsirVerseSelect');
-            tafsirSurah.addEventListener('change', () => {
+            tafsirSurah?.addEventListener('change', () => {
                 const meta = window.OfflineQuranDB.getSurahMeta(tafsirSurah.value);
                 if (!meta) return;
                 let opts = '';
@@ -3471,19 +3581,121 @@
                 tafsirVerse.innerHTML = opts;
                 renderTafsirView(Number(tafsirSurah.value), 1);
             });
-            tafsirVerse.addEventListener('change', () => {
+            tafsirVerse?.addEventListener('change', () => {
                 renderTafsirView(Number(tafsirSurah.value), Number(tafsirVerse.value));
             });
+        }
 
-            function renderTafsirView(surah, verse) {
-                const tafsir = window.OfflineQuranDB.getTafsir(surah, verse);
-                document.getElementById('tafsirContainer').innerHTML = `
-                    <div class="card">
-                        <h3 style="color: var(--gold); margin-bottom: 8px;">Tafsir for Ayah ${surah}:${verse}</h3>
-                        <p style="line-height: 1.8; color: var(--text-secondary);">${tafsir}</p>
-                    </div>
-                `;
+        // ========== WORD BY WORD & TAFSIR VIEWS ==========
+        window.speakArabicWord = function(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const clean = text.replace(/[\u06D6-\u06ED]/g, '');
+                const utterance = new SpeechSynthesisUtterance(clean);
+                utterance.lang = 'ar-SA';
+                utterance.rate = 0.85;
+                window.speechSynthesis.speak(utterance);
             }
+        };
+
+        function initWordByWordView() {
+            const wbwSurah = document.getElementById('wbwSurahSelect');
+            const wbwVerse = document.getElementById('wbwVerseSelect');
+            if (!wbwSurah || !wbwVerse) return;
+
+            if (!wbwSurah.value) {
+                wbwSurah.value = String(appState.currentSurah || 1);
+            }
+            const surahNum = Number(wbwSurah.value) || 1;
+            const meta = window.OfflineQuranDB.getSurahMeta(surahNum);
+            if (meta) {
+                let opts = '';
+                for (let i = 1; i <= meta.verses; i++) opts += `<option value="${i}">${i}</option>`;
+                wbwVerse.innerHTML = opts;
+                const v = appState.currentVerse <= meta.verses ? appState.currentVerse : 1;
+                wbwVerse.value = String(v);
+                renderWbwView(surahNum, v);
+            }
+        }
+
+        function renderWbwView(surah, verse) {
+            const v = window.OfflineQuranDB.getVerseByKey(`${surah}:${verse}`);
+            const meta = window.OfflineQuranDB.getSurahMeta(surah);
+            const words = (v && v.words) ? v.words : [];
+            const container = document.getElementById('wbwContainer');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-weight: 600; color: var(--gold-light);">
+                        ${meta ? meta.name : 'Surah'} ${surah}:${verse} • ${words.length} Words
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="playVerseAudioDirect(${surah}, ${verse})">
+                        <svg class="app-icon"><use href="#icon-play"/></svg> Listen Ayah
+                    </button>
+                </div>
+                <div class="word-by-word-container">
+                    ${words.map(w => `
+                        <div class="word-item" onclick="speakArabicWord('${w.text_uthmani.replace(/'/g, "\\'")}')" title="Tap to listen pronunciation">
+                            <div class="word-arabic">${w.text_uthmani}</div>
+                            <div class="word-transliteration">${w.transliteration}</div>
+                            <div class="word-translation">${w.translation}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function initTafsirView() {
+            const tafsirSurah = document.getElementById('tafsirSurahSelect');
+            const tafsirVerse = document.getElementById('tafsirVerseSelect');
+            if (!tafsirSurah || !tafsirVerse) return;
+
+            if (!tafsirSurah.value) {
+                tafsirSurah.value = String(appState.currentSurah || 1);
+            }
+            const surahNum = Number(tafsirSurah.value) || 1;
+            const meta = window.OfflineQuranDB.getSurahMeta(surahNum);
+            if (meta) {
+                let opts = '';
+                for (let i = 1; i <= meta.verses; i++) opts += `<option value="${i}">${i}</option>`;
+                tafsirVerse.innerHTML = opts;
+                const v = appState.currentVerse <= meta.verses ? appState.currentVerse : 1;
+                tafsirVerse.value = String(v);
+                renderTafsirView(surahNum, v);
+            }
+        }
+
+        function renderTafsirView(surah, verse) {
+            const tafsir = window.OfflineQuranDB.getTafsir(surah, verse);
+            const v = window.OfflineQuranDB.getVerseByKey(`${surah}:${verse}`);
+            const meta = window.OfflineQuranDB.getSurahMeta(surah);
+            const container = document.getElementById('tafsirContainer');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="card" style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <span class="badge" style="background: var(--gold); color: #000; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+                            ${meta ? meta.name : 'Surah'} ${surah}:${verse}
+                        </span>
+                        <button class="btn btn-primary btn-sm" onclick="playVerseAudioDirect(${surah}, ${verse})">
+                            <svg class="app-icon"><use href="#icon-play"/></svg> Listen Ayah
+                        </button>
+                    </div>
+                    ${v ? `
+                        <div class="arabic-text" style="text-align: right; margin-bottom: 12px; font-size: 1.45rem; line-height: 2;">
+                            ${v.text_uthmani}
+                        </div>
+                        <div class="translation-text" style="margin-bottom: 16px; border-left: 3px solid var(--accent); padding-left: 12px;">
+                            ${v.english}
+                        </div>
+                    ` : ''}
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0;" />
+                    <h4 style="color: var(--gold); margin-bottom: 10px; font-size: 1.05rem;">Classical & Spiritual Commentary</h4>
+                    <p style="line-height: 1.85; color: var(--text-primary); font-size: 0.95rem;">${tafsir}</p>
+                </div>
+            `;
         }
 
         document.addEventListener('DOMContentLoaded', initApp);

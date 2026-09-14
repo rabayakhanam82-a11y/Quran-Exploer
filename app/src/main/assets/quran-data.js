@@ -122,6 +122,12 @@
     { number: 114, name: "An-Nas", arabic: "الناس", english: "Mankind", verses: 6, type: "meccan", juz: 30, page: 604 }
   ];
 
+  // Augment metadata for broad compatibility
+  SURAHS_META.forEach(s => {
+    s.id = s.number;
+    s.revelation = s.type === 'medinan' ? 'Medinan' : 'Meccan';
+  });
+
   // Juz Reference Points (1 to 30)
   const JUZ_MAPPING = [
     { juz: 1, name: "Alif-Lam-Mim", arabic: "الم", surah: 1, verse: 1, page: 1 },
@@ -662,6 +668,8 @@
 
   // Complete offline dataset manager
   const OfflineQuranDB = {
+    surahs: SURAHS_META,
+
     getSurahs: function () {
       return SURAHS_META;
     },
