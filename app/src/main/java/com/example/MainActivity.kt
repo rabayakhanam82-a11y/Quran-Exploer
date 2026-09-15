@@ -1,11 +1,11 @@
 package com.example
 
 import android.annotation.SuppressLint
+import android.graphics.Color as AndroidColor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.webkit.ConsoleMessage
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.ServiceWorkerClient
@@ -19,14 +19,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import com.example.ui.theme.MyApplicationTheme
@@ -50,10 +55,14 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
 
     try {
-      val jsCache = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/js")
-      if (!jsCache.exists()) jsCache.mkdirs()
-      val wasmCache = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/wasm")
-      if (!wasmCache.exists()) wasmCache.mkdirs()
+      val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+      insetsController.isAppearanceLightStatusBars = false
+      insetsController.isAppearanceLightNavigationBars = false
+    } catch (_: Throwable) {}
+
+    try {
+      // Clear legacy webview disk cache on startup to avoid loading stale HTML shells
+      cacheDir.deleteRecursively()
     } catch (_: Throwable) {}
 
     val assetsHandler = WebViewAssetLoader.AssetsPathHandler(this)
@@ -113,10 +122,18 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       MyApplicationTheme {
-        QuranWebView(
-          onRequestIntercept = { handleIntercept(it) },
-          onWebViewCreated = { webView = it }
-        )
+        Box(
+          modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF090E15))
+            .statusBarsPadding()
+            .navigationBarsPadding()
+        ) {
+          QuranWebView(
+            onRequestIntercept = { handleIntercept(it) },
+            onWebViewCreated = { webView = it }
+          )
+        }
       }
     }
   }
@@ -141,17 +158,17 @@ fun QuranWebView(
   AndroidView(
     modifier = modifier
       .fillMaxSize()
-      .safeDrawingPadding()
       .imePadding(),
     factory = { context ->
       WebView(context).apply {
+        setBackgroundColor(AndroidColor.parseColor("#090E15"))
         settings.apply {
           javaScriptEnabled = true
           domStorageEnabled = true
           allowFileAccess = true
           allowContentAccess = true
           mediaPlaybackRequiresUserGesture = false
-          cacheMode = WebSettings.LOAD_DEFAULT
+          cacheMode = WebSettings.LOAD_NO_CACHE
           useWideViewPort = true
           loadWithOverviewMode = true
           mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -186,6 +203,7 @@ fun QuranWebView(
           }
         }
 
+        clearCache(true)
         loadUrl("https://appassets.androidplatform.net/assets/index.html")
         onWebViewCreated(this)
       }

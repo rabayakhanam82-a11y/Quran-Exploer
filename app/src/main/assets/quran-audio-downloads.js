@@ -417,6 +417,31 @@
       });
     }
 
+    async clearReciterAudio(reciterId) {
+      const db = await this.ensureReady();
+      if (!db) return false;
+
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction('audio_surahs', 'readwrite');
+          const store = tx.objectStore('audio_surahs');
+          const req = store.getAll();
+          req.onsuccess = () => {
+            const list = req.result || [];
+            list.forEach(item => {
+              if (item.reciterId === reciterId) {
+                store.delete(item.id);
+              }
+            });
+            resolve(true);
+          };
+          req.onerror = () => resolve(false);
+        } catch (_) {
+          resolve(false);
+        }
+      });
+    }
+
     async clearAllAudio() {
       const db = await this.ensureReady();
       if (!db) return;
@@ -533,32 +558,64 @@
       });
     },
 
-    // Batch download method called by index.html: batchDownloadSurahs(reciterId, surahList, onProgress, onComplete, onError)
-    async batchDownloadSurahs(reciterId, surahList, onProgress, onComplete, onError) {
+    // Batch download control state
+    batchCancelled: false,
+    isBatchRunning: false,
+
+    cancelBatchDownload() {
+      this.batchCancelled = true;
+      this.isBatchRunning = false;
+    },
+
+    cancelBatch() {
+      this.cancelBatchDownload();
+    },
+
+    // Batch download method called by index.html: batchDownloadSurahs(reciterId, surahList, onProgress, onComplete, onError, onCancelled)
+    async batchDownloadSurahs(reciterId, surahList, onProgress, onComplete, onError, onCancelled) {
+      this.batchCancelled = false;
+      this.isBatchRunning = true;
       try {
         let completedCount = 0;
         const total = surahList.length;
 
         for (const surahNum of surahList) {
+          if (this.batchCancelled) {
+            this.isBatchRunning = false;
+            if (onCancelled) onCancelled(completedCount, total);
+            return;
+          }
+
           const isDownloaded = await offlineStorage.isSurahDownloaded(reciterId, surahNum);
           if (isDownloaded) {
             completedCount++;
-            if (onProgress) onProgress(completedCount, total, surahNum);
+            if (onProgress) onProgress(completedCount, total, surahNum, 100);
             continue;
           }
 
-          if (onProgress) onProgress(completedCount, total, surahNum);
+          if (onProgress) onProgress(completedCount, total, surahNum, 0);
           try {
-            await this.downloadSurah(reciterId, surahNum);
+            await this.downloadSurah(reciterId, surahNum, (loaded, totalBytes, pct) => {
+              if (onProgress) onProgress(completedCount, total, surahNum, pct);
+            });
           } catch (e) {
             console.warn(`Failed surah ${surahNum}, skipping:`, e);
           }
+
+          if (this.batchCancelled) {
+            this.isBatchRunning = false;
+            if (onCancelled) onCancelled(completedCount, total);
+            return;
+          }
+
           completedCount++;
-          if (onProgress) onProgress(completedCount, total, surahNum);
+          if (onProgress) onProgress(completedCount, total, surahNum, 100);
         }
 
+        this.isBatchRunning = false;
         if (onComplete) onComplete();
       } catch (err) {
+        this.isBatchRunning = false;
         if (onError) onError(err);
       }
     }
