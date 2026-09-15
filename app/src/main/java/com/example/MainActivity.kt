@@ -148,7 +148,6 @@ fun QuranWebView(
         settings.apply {
           javaScriptEnabled = true
           domStorageEnabled = true
-          databaseEnabled = true
           allowFileAccess = true
           allowContentAccess = true
           mediaPlaybackRequiresUserGesture = false
@@ -157,9 +156,6 @@ fun QuranWebView(
           loadWithOverviewMode = true
           mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
-
-        // Use default layer type so WebView uses its own internal compositor
-        setLayerType(View.LAYER_TYPE_NONE, null)
 
         webChromeClient = object : WebChromeClient() {
           override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
@@ -182,6 +178,10 @@ fun QuranWebView(
             view: WebView,
             detail: RenderProcessGoneDetail
           ): Boolean {
+            Log.w("QuranWebView", "Render process gone (didCrash: ${detail.didCrash()})")
+            view.post {
+              view.loadUrl("https://appassets.androidplatform.net/assets/index.html")
+            }
             return true
           }
         }
