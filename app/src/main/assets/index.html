@@ -413,6 +413,12 @@
         }
 
         /* Sidebar Navigation Drawer */
+        html.sidebar-open,
+        html.sidebar-open body {
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
         .sidebar {
             position: fixed;
             left: 0;
@@ -423,18 +429,20 @@
             background: var(--bg-secondary);
             border-right: 1px solid var(--border-color);
             transform: translateX(-105%);
-            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s ease, box-shadow 0.28s ease;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 2500;
             display: flex;
             flex-direction: column;
             visibility: hidden;
+            pointer-events: none;
             box-shadow: none;
             overflow: hidden;
         }
 
-        .sidebar.open {
-            transform: translateX(0);
+        .sidebar-open .sidebar {
+            transform: none;
             visibility: visible;
+            pointer-events: auto;
             box-shadow: 10px 0 40px rgba(0, 0, 0, 0.8);
         }
 
@@ -496,7 +504,9 @@
 
         .sidebar-nav {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
+            overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
             padding: 12px;
         }
@@ -535,6 +545,7 @@
             border-color: var(--border-color);
         }
 
+        /* A plain scrim avoids Android WebView compositing blur over the drawer. */
         .overlay {
             position: fixed;
             top: 0;
@@ -542,19 +553,26 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.26s ease, visibility 0.26s ease;
+            pointer-events: none;
+            transition: opacity 0.26s ease;
             z-index: 2400;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .overlay.show {
+        .sidebar-open .overlay {
             opacity: 1;
             visibility: visible;
+            pointer-events: auto;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sidebar,
+            .overlay {
+                transition: none;
+            }
         }
 
         /* Main Content & Sections */
@@ -1688,12 +1706,6 @@
                 -webkit-overflow-scrolling: touch;
             }
 
-            .sidebar {
-                top: 44px;
-                height: calc(100vh - 44px);
-                height: calc(100dvh - 44px);
-            }
-
             .sidebar-nav {
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
@@ -2293,7 +2305,7 @@
     <header class="top-bar">
         <div class="top-bar-left">
             <div class="top-left-controls">
-                <button class="menu-toggle" id="menuToggle" onclick="window.toggleMenu(event)" title="Open menu" aria-label="Open menu">
+                <button type="button" class="menu-toggle" id="menuToggle" title="Open menu" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
                     <svg class="app-icon"><use href="#icon-bars"/></svg>
                 </button>
                 <button class="section-back-btn" id="sectionBackBtn" title="Back to previous section" aria-label="Back" disabled>
@@ -2379,7 +2391,8 @@
     </header>
 
     <!-- SIDEBAR NAVIGATION DRAWER -->
-    <nav class="sidebar" id="sidebar">
+    <div class="overlay" id="overlay" aria-hidden="true"></div>
+    <nav class="sidebar" id="sidebar" aria-label="Main navigation" aria-hidden="true">
         <div class="sidebar-header">
             <div class="sidebar-brand">
                 <svg class="app-icon" style="color: var(--gold); font-size: 1.45rem;"><use href="#icon-book-open"/></svg>
@@ -2388,22 +2401,22 @@
                     <div class="sidebar-brand-sub">Complete Offline Quran</div>
                 </div>
             </div>
-            <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="window.closeMenu(event)" title="Close menu" aria-label="Close menu">
-                ✕
+            <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close menu" aria-label="Close menu">
+                <svg class="app-icon" aria-hidden="true"><use href="#icon-times"/></svg>
             </button>
         </div>
         <div class="sidebar-nav">
             <div class="nav-section-title">Main</div>
-            <a class="nav-item active" data-section="home" onclick="showSection('home'); window.closeMenu();">
+            <a class="nav-item active" href="#section-home" data-section="home" aria-current="page">
                 <svg class="app-icon"><use href="#icon-home"/></svg> Home
             </a>
-            <a class="nav-item" data-section="read" onclick="showSection('read'); window.closeMenu();">
+            <a class="nav-item" href="#section-read" data-section="read">
                 <svg class="app-icon"><use href="#icon-book-open"/></svg> Read Quran
             </a>
-            <a class="nav-item" data-section="surahs" onclick="showSection('surahs'); window.closeMenu();">
+            <a class="nav-item" href="#section-surahs" data-section="surahs">
                 <svg class="app-icon"><use href="#icon-list"/></svg> All Surahs (114)
             </a>
-            <a class="nav-item" data-section="downloads" onclick="showSection('downloads'); window.closeMenu();" style="border: 1px solid rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.1);">
+            <a class="nav-item" href="#section-downloads" data-section="downloads" style="border: 1px solid rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.1);">
                 <svg class="app-icon" style="color: var(--gold);"><use href="#icon-download"/></svg>
                 <div style="display: flex; flex-direction: column; align-items: flex-start;">
                     <span style="font-weight: 700; color: var(--gold-light);">Download All</span>
@@ -2411,39 +2424,37 @@
                 </div>
                 <span style="margin-left: auto; background: var(--accent); color: #fff; font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 4px;">FULL</span>
             </a>
-            <a class="nav-item" data-section="juz" onclick="showSection('juz'); window.closeMenu();">
+            <a class="nav-item" href="#section-juz" data-section="juz">
                 <svg class="app-icon"><use href="#icon-layer-group"/></svg> Juz / Hizb / Page
             </a>
-            <a class="nav-item" data-section="search" onclick="showSection('search'); window.closeMenu();">
+            <a class="nav-item" href="#section-search" data-section="search">
                 <svg class="app-icon"><use href="#icon-search"/></svg> Search
             </a>
 
             <div class="nav-section-title" style="margin-top: 14px;">Features</div>
-            <a class="nav-item" data-section="dashboard" onclick="showSection('dashboard'); window.closeMenu();">
+            <a class="nav-item" href="#section-dashboard" data-section="dashboard">
                 <svg class="app-icon"><use href="#icon-chart-line"/></svg> Dashboard & Streak
             </a>
-            <a class="nav-item" data-section="prayers" onclick="showSection('prayers'); window.closeMenu();">
+            <a class="nav-item" href="#section-prayers" data-section="prayers">
                 <svg class="app-icon"><use href="#icon-hands-praying"/></svg> Prayer Tracker
             </a>
-            <a class="nav-item" data-section="qatar-prayers" onclick="showSection('qatar-prayers'); window.closeMenu();">
+            <a class="nav-item" href="#section-qatar-prayers" data-section="qatar-prayers">
                 <svg class="app-icon"><use href="#icon-mosque"/></svg> Qatar Prayers (Solar)
             </a>
-            <a class="nav-item" data-section="wordbyword" onclick="showSection('wordbyword'); window.closeMenu();">
+            <a class="nav-item" href="#section-wordbyword" data-section="wordbyword">
                 <svg class="app-icon"><use href="#icon-font"/></svg> Word by Word
             </a>
-            <a class="nav-item" data-section="tafsir" onclick="showSection('tafsir'); window.closeMenu();">
+            <a class="nav-item" href="#section-tafsir" data-section="tafsir">
                 <svg class="app-icon"><use href="#icon-book"/></svg> Tafsir
             </a>
-            <a class="nav-item" data-section="bookmarks" onclick="showSection('bookmarks'); window.closeMenu();">
+            <a class="nav-item" href="#section-bookmarks" data-section="bookmarks">
                 <svg class="app-icon"><use href="#icon-bookmark"/></svg> Bookmarks
             </a>
-            <a class="nav-item" data-section="tajweed-guide" onclick="showSection('tajweed-guide'); window.closeMenu();">
+            <a class="nav-item" href="#section-tajweed-guide" data-section="tajweed-guide">
                 <svg class="app-icon"><use href="#icon-info-circle"/></svg> Tajweed Guide
             </a>
         </div>
     </nav>
-
-    <div class="overlay" id="overlay" onclick="window.closeMenu(event)"></div>
 
     <!-- MAIN CONTENT -->
     <main class="main-content" id="mainContent">
@@ -2952,6 +2963,80 @@
         <svg class="app-icon"><use href="#icon-arrow-up"/></svg>
     </button>
 
+    <script>
+        // ========== GLOBAL DRAWER / MENU CONTROLLER ==========
+        // Bind before dataset initialization, with one click handler per control.
+        (function() {
+            const root = document.documentElement;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const menuToggle = document.getElementById('menuToggle');
+            const closeButton = document.getElementById('sidebarCloseBtn');
+            let previousFocus = null;
+
+            window.isMenuOpen = function() {
+                return root.classList.contains('sidebar-open');
+            };
+
+            function setMenuOpen(open, event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                if (open === window.isMenuOpen()) return;
+
+                if (open) previousFocus = document.activeElement;
+                root.classList.toggle('sidebar-open', open);
+                menuToggle.setAttribute('aria-expanded', String(open));
+
+                if (open) {
+                    sidebar.setAttribute('aria-hidden', 'false');
+                    document.getElementById('quickSettingsDropdown').classList.remove('show');
+                    closeButton.focus({ preventScroll: true });
+                } else {
+                    if (sidebar.contains(document.activeElement)) {
+                        const target = previousFocus && previousFocus.isConnected ? previousFocus : menuToggle;
+                        target.focus({ preventScroll: true });
+                    }
+                    sidebar.setAttribute('aria-hidden', 'true');
+                }
+            }
+
+            window.openMenu = function(event) { setMenuOpen(true, event); };
+            window.closeMenu = function(event) { setMenuOpen(false, event); };
+            window.toggleMenu = function(event) { setMenuOpen(!window.isMenuOpen(), event); };
+
+            menuToggle.addEventListener('click', window.toggleMenu);
+            closeButton.addEventListener('click', window.closeMenu);
+            overlay.addEventListener('click', window.closeMenu);
+            sidebar.addEventListener('click', function(event) {
+                const link = event.target.closest('a[data-section]');
+                if (!link || !sidebar.contains(link)) return;
+                event.preventDefault();
+                window.closeMenu();
+                window.showSection(link.dataset.section);
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (!window.isMenuOpen()) return;
+                if (event.key === 'Escape') {
+                    window.closeMenu(event);
+                } else if (event.key === 'Tab') {
+                    const controls = sidebar.querySelectorAll('button, a[href]');
+                    const first = controls[0];
+                    const last = controls[controls.length - 1];
+                    if (event.shiftKey && (document.activeElement === first || !sidebar.contains(document.activeElement))) {
+                        event.preventDefault();
+                        last.focus();
+                    } else if (!event.shiftKey && (document.activeElement === last || !sidebar.contains(document.activeElement))) {
+                        event.preventDefault();
+                        first.focus();
+                    }
+                }
+            });
+        })();
+    </script>
+
     <!-- Offline Dataset Scripts -->
     <script src="quran-data.js"></script>
     <script src="quran-audio-downloads.js"></script>
@@ -3104,44 +3189,6 @@
             tafsirDlContainer: document.getElementById('tafsirDlContainer')
         };
 
-        // ========== GLOBAL DRAWER / MENU CONTROLLER ==========
-        window.openMenu = function(e) {
-            if (e) {
-                if (typeof e.preventDefault === 'function') e.preventDefault();
-                if (typeof e.stopPropagation === 'function') e.stopPropagation();
-            }
-            const sidebar = document.getElementById('sidebar') || dom.sidebar;
-            const overlay = document.getElementById('overlay') || dom.overlay;
-            if (sidebar) sidebar.classList.add('open');
-            if (overlay) overlay.classList.add('show');
-            document.body.classList.add('sidebar-open');
-        };
-
-        window.closeMenu = function(e) {
-            if (e) {
-                if (typeof e.preventDefault === 'function') e.preventDefault();
-                if (typeof e.stopPropagation === 'function') e.stopPropagation();
-            }
-            const sidebar = document.getElementById('sidebar') || dom.sidebar;
-            const overlay = document.getElementById('overlay') || dom.overlay;
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('show');
-            document.body.classList.remove('sidebar-open');
-        };
-
-        window.toggleMenu = function(e) {
-            if (e) {
-                if (typeof e.preventDefault === 'function') e.preventDefault();
-                if (typeof e.stopPropagation === 'function') e.stopPropagation();
-            }
-            const sidebar = document.getElementById('sidebar') || dom.sidebar;
-            if (sidebar && sidebar.classList.contains('open')) {
-                window.closeMenu(e);
-            } else {
-                window.openMenu(e);
-            }
-        };
-
         // ========== INIT APP ==========
         function initApp() {
             applyTheme(appState.theme);
@@ -3200,12 +3247,14 @@
             if (target) target.classList.add('active');
 
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.toggle('active', item.dataset.section === sectionId);
+                const active = item.dataset.section === sectionId;
+                item.classList.toggle('active', active);
+                if (active) item.setAttribute('aria-current', 'page');
+                else item.removeAttribute('aria-current');
             });
 
             document.body.classList.toggle('in-read-section', sectionId === 'read');
-            if (dom.sidebar) dom.sidebar.classList.remove('open');
-            if (dom.overlay) dom.overlay.classList.remove('show');
+            window.closeMenu();
 
             if (dom.sectionBackBtn) {
                 dom.sectionBackBtn.disabled = appState.sectionHistory.length <= 1;
@@ -4300,36 +4349,7 @@
 
         // ========== EVENT LISTENERS ==========
         function setupEventListeners() {
-            if (dom.menuToggle) {
-                dom.menuToggle.addEventListener('click', (e) => window.toggleMenu(e));
-                dom.menuToggle.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    window.toggleMenu(e);
-                });
-            }
-
-            if (dom.overlay) {
-                dom.overlay.addEventListener('click', (e) => window.closeMenu(e));
-                dom.overlay.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    window.closeMenu(e);
-                });
-            }
-
-            const closeBtn = document.getElementById('sidebarCloseBtn') || dom.sidebarCloseBtn;
-            if (closeBtn) {
-                closeBtn.addEventListener('click', (e) => window.closeMenu(e));
-            }
-
             dom.sectionBackBtn.addEventListener('click', goBack);
-
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.closeMenu();
-                    showSection(item.dataset.section);
-                });
-            });
 
             dom.themeToggle.addEventListener('click', () => {
                 applyTheme(appState.theme === 'dark' ? 'light' : 'dark');
