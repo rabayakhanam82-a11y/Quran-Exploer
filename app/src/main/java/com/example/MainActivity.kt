@@ -204,7 +204,10 @@ fun QuranWebView(
         }
 
         clearCache(true)
-        loadUrl("https://appassets.androidplatform.net/assets/index.html")
+        // Cache-busted URL: forces the WebView to re-read the packaged assets on
+        // every new build instead of reusing any cached/stale HTML shell. The
+        // in-page cleaner reads ?appbuild= to purge legacy CacheStorage entries.
+        loadUrl("https://appassets.androidplatform.net/assets/index.html?appbuild=${BuildConfig.VERSION_CODE}")
         onWebViewCreated(this)
       }
     }
