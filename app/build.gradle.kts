@@ -16,9 +16,9 @@ android {
   defaultConfig {
     applicationId = "com.aistudio.quranexplorer.offline"
     minSdk = 24
-    targetSdk = 36
-    versionCode = 6
-    versionName = "1.5"
+    targetSdk = 35
+    versionCode = 16
+    versionName = "2.5"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -36,6 +36,8 @@ android {
       storePassword = "android"
       keyAlias = "androiddebugkey"
       keyPassword = "android"
+      enableV1Signing = true
+      enableV2Signing = true
     }
   }
 

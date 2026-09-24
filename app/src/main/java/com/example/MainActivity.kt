@@ -38,15 +38,6 @@ import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
 
-  companion object {
-    init {
-      try {
-        android.system.Os.setenv("MESA_LOG_FILE", "/dev/null", true)
-        android.system.Os.setenv("LIBGL_ALWAYS_SOFTWARE", "1", true)
-      } catch (_: Throwable) {}
-    }
-  }
-
   private var webView: WebView? = null
 
   @SuppressLint("SetJavaScriptEnabled")
@@ -54,15 +45,14 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
+    }
+
     try {
       val insetsController = WindowCompat.getInsetsController(window, window.decorView)
       insetsController.isAppearanceLightStatusBars = false
       insetsController.isAppearanceLightNavigationBars = false
-    } catch (_: Throwable) {}
-
-    try {
-      // Clear legacy webview disk cache on startup to avoid loading stale HTML shells
-      cacheDir.deleteRecursively()
     } catch (_: Throwable) {}
 
     val assetsHandler = WebViewAssetLoader.AssetsPathHandler(this)
@@ -161,14 +151,18 @@ fun QuranWebView(
       .imePadding(),
     factory = { context ->
       WebView(context).apply {
+        setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
         setBackgroundColor(AndroidColor.parseColor("#090E15"))
+        overScrollMode = android.view.View.OVER_SCROLL_NEVER
+        isVerticalScrollBarEnabled = false
+        isHorizontalScrollBarEnabled = false
         settings.apply {
           javaScriptEnabled = true
           domStorageEnabled = true
           allowFileAccess = true
           allowContentAccess = true
           mediaPlaybackRequiresUserGesture = false
-          cacheMode = WebSettings.LOAD_NO_CACHE
+          cacheMode = WebSettings.LOAD_DEFAULT
           useWideViewPort = true
           loadWithOverviewMode = true
           mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -203,7 +197,6 @@ fun QuranWebView(
           }
         }
 
-        clearCache(true)
         // Cache-busted URL: forces the WebView to re-read the packaged assets on
         // every new build instead of reusing any cached/stale HTML shell. The
         // in-page cleaner reads ?appbuild= to purge legacy CacheStorage entries.
