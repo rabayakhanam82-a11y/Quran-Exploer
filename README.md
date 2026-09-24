@@ -22,9 +22,9 @@ The compiled Android application package is directly accessible and saved inside
 
 | File | Size | Architecture | Description |
 | :--- | :---: | :---: | :--- |
-| **[`QuranExplorer.apk`](./QuranExplorer.apk)** | **38 MB** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | **Recommended: Latest v2.5 Build 16 Production APK** |
-| **[`apk/QuranExplorer-latest.apk`](./apk/QuranExplorer-latest.apk)** | 38 MB | Universal | Latest stable distribution copy |
-| **[`apk/QuranExplorer-v2.5.apk`](./apk/QuranExplorer-v2.5.apk)** | 38 MB | Universal | Version 2.5 Milestone build archive |
+| **[`QuranExplorer.apk`](https://github.com/rabayakhanam82-a11y/Quran-Exploer/releases/download/V-2.5-Release/Quran-explorer.2.5.apk )** | **38 MB** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | **Recommended: Latest v2.5 Build 16 Production APK** |
+| **[`apk/QuranExplorer-latest.apk`](https://github.com/rabayakhanam82-a11y/Quran-Exploer/releases/download/V-2.5-Release/Quran-explorer.2.5.apk)** | 38 MB | Universal | Latest stable distribution copy |
+| **[`apk/QuranExplorer-v2.5.apk`](https://github.com/rabayakhanam82-a11y/Quran-Exploer/releases/download/V-2.5-Release/Quran-explorer.2.5.apk)** | 38 MB | Universal | Version 2.5 Milestone build archive |
 
 ### 📲 Quick Installation Steps
 1. Download **`QuranExplorer.apk`** from the file browser above.
